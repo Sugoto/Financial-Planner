@@ -63,6 +63,20 @@ export interface DashboardStats {
   userId: number;
 }
 
+export interface PortfolioItem {
+  id?: number;
+  itemId: string; // unique identifier like 'savings', 'mutual_funds', etc.
+  name: string;
+  category: string;
+  amount: number;
+  icon: string; // store icon name as string
+  color: string;
+  description: string;
+  userId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Database class extending Dexie
 export class FinancialPlannerDB extends Dexie {
   userProfiles!: Dexie.Table<UserProfile, number>;
@@ -71,6 +85,7 @@ export class FinancialPlannerDB extends Dexie {
   financialGoals!: Dexie.Table<FinancialGoal, number>;
   transactions!: Dexie.Table<Transaction, number>;
   dashboardStats!: Dexie.Table<DashboardStats, number>;
+  portfolioItems!: Dexie.Table<PortfolioItem, number>;
 
   constructor() {
     super("FinancialPlannerDB");
@@ -85,6 +100,21 @@ export class FinancialPlannerDB extends Dexie {
       transactions: "++id, description, amount, type, category, date, userId",
       dashboardStats:
         "++id, totalBalance, monthlyIncome, monthlyExpenses, monthlySavings, lastUpdated, userId",
+    });
+
+    // Add portfolioItems table in version 2
+    this.version(2).stores({
+      userProfiles: "++id, name, email, monthlyIncome, createdAt, updatedAt",
+      expenses: "++id, category, amount, userId, createdAt",
+      sipInvestments:
+        "++id, name, monthlyInvestment, expectedReturn, investmentPeriod, userId, isActive, createdAt, updatedAt",
+      financialGoals:
+        "++id, name, targetAmount, currentAmount, targetDate, category, userId, isActive, createdAt, updatedAt",
+      transactions: "++id, description, amount, type, category, date, userId",
+      dashboardStats:
+        "++id, totalBalance, monthlyIncome, monthlyExpenses, monthlySavings, lastUpdated, userId",
+      portfolioItems:
+        "++id, itemId, name, category, amount, icon, color, description, userId, createdAt, updatedAt",
     });
   }
 }
@@ -200,8 +230,76 @@ export class DatabaseService {
         lastUpdated: new Date(),
         userId: DEFAULT_USER_ID,
       });
+
+      // Initialize portfolio items if they don't exist (for migration)
+      await this.initializePortfolioItems();
     } catch (error) {
       console.error("Error initializing default data:", error);
+    }
+  }
+
+  // Initialize portfolio items if they don't exist (for migration)
+  static async initializePortfolioItems() {
+    try {
+      const existingItems = await db.portfolioItems
+        .where("userId")
+        .equals(DEFAULT_USER_ID)
+        .count();
+      if (existingItems > 0) return;
+
+      const defaultPortfolioItems: Omit<PortfolioItem, "id">[] = [
+        {
+          itemId: "savings",
+          name: "Savings Account",
+          category: "Cash",
+          amount: 150000,
+          icon: "PiggyBank",
+          color: "bg-blue-100 text-blue-600",
+          description: "Emergency fund and liquid savings",
+          userId: DEFAULT_USER_ID,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          itemId: "mutual_funds",
+          name: "Mutual Funds",
+          category: "Investments",
+          amount: 85000,
+          icon: "TrendingUp",
+          color: "bg-purple-100 text-purple-600",
+          description: "SIP and lump sum mutual fund investments",
+          userId: DEFAULT_USER_ID,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          itemId: "fixed_deposits",
+          name: "Fixed Deposits",
+          category: "Safe Investments",
+          amount: 200000,
+          icon: "Wallet",
+          color: "bg-teal-100 text-teal-600",
+          description: "FDs and other fixed income instruments",
+          userId: DEFAULT_USER_ID,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          itemId: "epf",
+          name: "EPF/PPF",
+          category: "Retirement",
+          amount: 125000,
+          icon: "Target",
+          color: "bg-rose-100 text-rose-600",
+          description: "Provident fund and retirement savings",
+          userId: DEFAULT_USER_ID,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+      await db.portfolioItems.bulkAdd(defaultPortfolioItems);
+    } catch (error) {
+      console.error("Error initializing portfolio items:", error);
     }
   }
 
@@ -313,6 +411,55 @@ export class DatabaseService {
     });
   }
 
+  // Portfolio operations
+  static async getPortfolioItems(): Promise<PortfolioItem[]> {
+    return await db.portfolioItems
+      .where("userId")
+      .equals(DEFAULT_USER_ID)
+      .toArray();
+  }
+
+  static async getPortfolioItemByItemId(
+    itemId: string
+  ): Promise<PortfolioItem | undefined> {
+    return await db.portfolioItems
+      .where("userId")
+      .equals(DEFAULT_USER_ID)
+      .and((item) => item.itemId === itemId)
+      .first();
+  }
+
+  static async addPortfolioItem(
+    item: Omit<PortfolioItem, "id" | "userId" | "createdAt" | "updatedAt">
+  ) {
+    return await db.portfolioItems.add({
+      ...item,
+      userId: DEFAULT_USER_ID,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+
+  static async updatePortfolioItem(
+    itemId: string,
+    updates: Partial<PortfolioItem>
+  ) {
+    const item = await this.getPortfolioItemByItemId(itemId);
+    if (item && item.id) {
+      await db.portfolioItems.update(item.id, {
+        ...updates,
+        updatedAt: new Date(),
+      });
+    }
+  }
+
+  static async deletePortfolioItem(itemId: string) {
+    const item = await this.getPortfolioItemByItemId(itemId);
+    if (item && item.id) {
+      await db.portfolioItems.delete(item.id);
+    }
+  }
+
   // Utility function to recalculate dashboard stats
   static async recalculateDashboardStats() {
     const expenses = await this.getExpenses();
@@ -336,3 +483,4 @@ export class DatabaseService {
 
 // Initialize database when module loads
 DatabaseService.initializeDefaultData().catch(console.error);
+DatabaseService.initializePortfolioItems().catch(console.error);

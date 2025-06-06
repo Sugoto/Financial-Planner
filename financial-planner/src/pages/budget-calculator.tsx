@@ -31,7 +31,7 @@ export function BudgetCalculatorPage() {
     updateExpense,
     deleteExpense,
   } = useExpenses();
-  const { profile, loading: profileLoading, updateProfile } = useUserProfile();
+  const { profile, loading: profileLoading } = useUserProfile();
 
   const [monthlyIncome, setMonthlyIncome] = useState("");
   const [newExpenseCategory, setNewExpenseCategory] = useState("");

@@ -6,7 +6,8 @@ import type {
   FinancialGoal, 
   DashboardStats,
   UserProfile,
-  Transaction
+  Transaction,
+  PortfolioItem
 } from '@/lib/database';
 
 // Hook for managing expenses
@@ -252,5 +253,62 @@ export function useTransactions(limit: number = 10) {
     loading,
     addTransaction,
     refresh: loadTransactions
+  };
+}
+
+// Hook for managing portfolio items
+export function usePortfolioItems() {
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadPortfolioItems = async () => {
+    try {
+      const data = await DatabaseService.getPortfolioItems();
+      setPortfolioItems(data);
+    } catch (error) {
+      console.error('Error loading portfolio items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addPortfolioItem = async (item: Omit<PortfolioItem, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      await DatabaseService.addPortfolioItem(item);
+      await loadPortfolioItems();
+    } catch (error) {
+      console.error('Error adding portfolio item:', error);
+    }
+  };
+
+  const updatePortfolioItem = async (itemId: string, updates: Partial<PortfolioItem>) => {
+    try {
+      await DatabaseService.updatePortfolioItem(itemId, updates);
+      await loadPortfolioItems();
+    } catch (error) {
+      console.error('Error updating portfolio item:', error);
+    }
+  };
+
+  const deletePortfolioItem = async (itemId: string) => {
+    try {
+      await DatabaseService.deletePortfolioItem(itemId);
+      await loadPortfolioItems();
+    } catch (error) {
+      console.error('Error deleting portfolio item:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadPortfolioItems();
+  }, []);
+
+  return {
+    portfolioItems,
+    loading,
+    addPortfolioItem,
+    updatePortfolioItem,
+    deletePortfolioItem,
+    refresh: loadPortfolioItems
   };
 } 
