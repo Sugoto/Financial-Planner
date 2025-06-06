@@ -9,8 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   Dialog,
   DialogContent,
@@ -20,9 +19,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
   Calculator,
   HomeIcon,
   Zap,
@@ -148,14 +144,7 @@ export function BudgetCalculatorPage() {
     return expense?.amount || 0;
   };
 
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + expense.amount,
-    0
-  );
   const income = parseFloat(monthlyIncome) || 0;
-  const savings = income - totalExpenses;
-  const savingsRate = income > 0 ? (savings / income) * 100 : 0;
-  const expenseRate = income > 0 ? (totalExpenses / income) * 100 : 0;
 
   const handleCategoryAction = (
     categoryId: string,
@@ -226,8 +215,22 @@ export function BudgetCalculatorPage() {
     (cat) => cat.id === currentCategory
   );
 
+  // Calculate needs vs wants breakdown
+  const needsTotal = NEEDS_CATEGORIES.reduce((sum, category) => {
+    return sum + getCategoryAmount(category.id);
+  }, 0);
+
+  const wantsTotal = WANTS_CATEGORIES.reduce((sum, category) => {
+    return sum + getCategoryAmount(category.id);
+  }, 0);
+
+  const needsPercentage = income > 0 ? (needsTotal / income) * 100 : 0;
+  const wantsPercentage = income > 0 ? (wantsTotal / income) * 100 : 0;
+  const savingsPercentage =
+    income > 0 ? ((income - needsTotal - wantsTotal) / income) * 100 : 0;
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-14">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
@@ -239,308 +242,225 @@ export function BudgetCalculatorPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="calculator" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="calculator">Budget Calculator</TabsTrigger>
-          <TabsTrigger value="analysis">Budget Analysis</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="calculator" className="space-y-6">
-          {/* Needs Categories */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-green-700">Needs</CardTitle>
-              <CardDescription>
-                Essential expenses you can't avoid
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {NEEDS_CATEGORIES.map((category) => {
-                  const IconComponent = category.icon;
-                  const amount = getCategoryAmount(category.id);
-
-                  return (
-                    <Card
-                      key={category.id}
-                      className="relative border-green-200"
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
-                          >
-                            <IconComponent
-                              className={`h-5 w-5 ${category.color}`}
-                            />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">
-                              {category.title}
-                            </CardTitle>
-                            <CardDescription className="text-sm">
-                              {category.subtitle}
-                            </CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="flex items-center justify-between">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleCategoryAction(category.id, "subtract")
-                            }
-                            disabled={amount === 0}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-
-                          <div className="text-center">
-                            <div className="text-2xl font-bold">
-                              ₹{formatIndianNumber(amount)}
-                            </div>
-                          </div>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleCategoryAction(category.id, "add")
-                            }
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Wants Categories */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-purple-700">Wants</CardTitle>
-              <CardDescription>
-                Lifestyle and entertainment expenses
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {WANTS_CATEGORIES.map((category) => {
-                  const IconComponent = category.icon;
-                  const amount = getCategoryAmount(category.id);
-
-                  return (
-                    <Card
-                      key={category.id}
-                      className="relative border-purple-200"
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
-                          >
-                            <IconComponent
-                              className={`h-5 w-5 ${category.color}`}
-                            />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">
-                              {category.title}
-                            </CardTitle>
-                            <CardDescription className="text-sm">
-                              {category.subtitle}
-                            </CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="flex items-center justify-between">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleCategoryAction(category.id, "subtract")
-                            }
-                            disabled={amount === 0}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-
-                          <div className="text-center">
-                            <div className="text-2xl font-bold">
-                              ₹{formatIndianNumber(amount)}
-                            </div>
-                          </div>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleCategoryAction(category.id, "add")
-                            }
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analysis" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Expense Ratio
-                </CardTitle>
-                <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {expenseRate.toFixed(1)}%
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {expenseRate > 80
-                    ? "Consider reducing expenses"
-                    : "Good expense management"}
-                </p>
-                <Progress value={expenseRate} className="mt-2 h-2" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Savings Rate
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {savingsRate.toFixed(1)}%
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {savingsRate >= 20
-                    ? "Excellent savings rate!"
-                    : "Try to save more"}
-                </p>
-                <Progress
-                  value={Math.max(0, savingsRate)}
-                  className="mt-2 h-2"
+      {/* Income Breakdown Tracker */}
+      <div>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Visual Progress Bar */}
+            <div className="relative">
+              <div className="flex h-6 rounded-lg overflow-hidden bg-gray-100">
+                <div
+                  className="bg-green-500 transition-all duration-300"
+                  style={{ width: `${needsPercentage}%` }}
                 />
-              </CardContent>
-            </Card>
+                <div
+                  className="bg-purple-500 transition-all duration-300"
+                  style={{ width: `${wantsPercentage}%` }}
+                />
+                <div
+                  className="bg-blue-500 transition-all duration-300"
+                  style={{ width: `${savingsPercentage}%` }}
+                />
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Annual Savings
-                </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ₹{formatIndianNumber(savings * 12)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Projected annual savings
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Expense Breakdown</CardTitle>
-              <CardDescription>Your spending by category</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Needs Breakdown */}
-                <div>
-                  <h4 className="text-lg font-semibold text-green-700 mb-3">
-                    Needs
-                  </h4>
-                  <div className="space-y-3">
-                    {NEEDS_CATEGORIES.map((category) => {
-                      const amount = getCategoryAmount(category.id);
-                      const percentage =
-                        totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
-
-                      if (amount === 0) return null;
-
-                      return (
-                        <div key={category.id} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium">
-                              {category.title}
-                            </span>
-                            <div className="text-right">
-                              <span className="text-sm font-medium">
-                                ₹{formatIndianNumber(amount)}
-                              </span>
-                              <span className="text-xs text-muted-foreground ml-2">
-                                ({percentage.toFixed(1)}%)
-                              </span>
-                            </div>
-                          </div>
-                          <Progress value={percentage} className="h-2" />
-                        </div>
-                      );
-                    })}
+            {/* Legend and Values */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-4 h-4 bg-green-500 rounded"></div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium">Needs</span>
+                    <span className="text-sm font-bold">
+                      {needsPercentage.toFixed(1)}%
+                    </span>
                   </div>
-                </div>
-
-                {/* Wants Breakdown */}
-                <div>
-                  <h4 className="text-lg font-semibold text-purple-700 mb-3">
-                    Wants
-                  </h4>
-                  <div className="space-y-3">
-                    {WANTS_CATEGORIES.map((category) => {
-                      const amount = getCategoryAmount(category.id);
-                      const percentage =
-                        totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
-
-                      if (amount === 0) return null;
-
-                      return (
-                        <div key={category.id} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium">
-                              {category.title}
-                            </span>
-                            <div className="text-right">
-                              <span className="text-sm font-medium">
-                                ₹{formatIndianNumber(amount)}
-                              </span>
-                              <span className="text-xs text-muted-foreground ml-2">
-                                ({percentage.toFixed(1)}%)
-                              </span>
-                            </div>
-                          </div>
-                          <Progress value={percentage} className="h-2" />
-                        </div>
-                      );
-                    })}
+                  <div className="text-xs text-muted-foreground">
+                    ₹{formatIndianNumber(needsTotal)}
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+              <div className="flex items-center space-x-3">
+                <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium">Wants</span>
+                    <span className="text-sm font-bold">
+                      {wantsPercentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    ₹{formatIndianNumber(wantsTotal)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium">Savings</span>
+                    <span className="text-sm font-bold">
+                      {savingsPercentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    ₹{formatIndianNumber(income - needsTotal - wantsTotal)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </div>
+
+      {/* Budget Calculator */}
+      <div className="space-y-6">
+        {/* Needs Categories */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-green-700">Needs</CardTitle>
+            <CardDescription>
+              Essential expenses you can't avoid
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {NEEDS_CATEGORIES.map((category) => {
+                const IconComponent = category.icon;
+                const amount = getCategoryAmount(category.id);
+
+                return (
+                  <Card key={category.id} className="relative">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                        >
+                          <IconComponent
+                            className={`h-5 w-5 ${category.color}`}
+                          />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">
+                            {category.title}
+                          </CardTitle>
+                          <CardDescription className="text-sm">
+                            {category.subtitle}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleCategoryAction(category.id, "subtract")
+                          }
+                          disabled={amount === 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">
+                            ₹{formatIndianNumber(amount)}
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleCategoryAction(category.id, "add")
+                          }
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Wants Categories */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-purple-700">Wants</CardTitle>
+            <CardDescription>
+              Lifestyle and entertainment expenses
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {WANTS_CATEGORIES.map((category) => {
+                const IconComponent = category.icon;
+                const amount = getCategoryAmount(category.id);
+
+                return (
+                  <Card key={category.id} className="relative">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                        >
+                          <IconComponent
+                            className={`h-5 w-5 ${category.color}`}
+                          />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">
+                            {category.title}
+                          </CardTitle>
+                          <CardDescription className="text-sm">
+                            {category.subtitle}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleCategoryAction(category.id, "subtract")
+                          }
+                          disabled={amount === 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">
+                            ₹{formatIndianNumber(amount)}
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleCategoryAction(category.id, "add")
+                          }
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Amount Input Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
