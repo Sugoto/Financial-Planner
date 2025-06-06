@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/app-layout";
 import { HomePage } from "@/pages/home";
 import { BudgetCalculatorPage } from "@/pages/budget-calculator";
 import { SipCalculatorPage } from "@/pages/sip-calculator";
+import { PortfolioPage } from "@/pages/portfolio";
 import "@/lib/database-utils";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
       <AppLayout>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/budget-calculator" element={<BudgetCalculatorPage />} />
           <Route path="/sip-calculator" element={<SipCalculatorPage />} />
         </Routes>

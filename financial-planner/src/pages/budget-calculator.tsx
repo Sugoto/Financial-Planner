@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -52,11 +53,7 @@ export function BudgetCalculatorPage() {
   const savingsRate = income > 0 ? (savings / income) * 100 : 0;
   const expenseRate = income > 0 ? (totalExpenses / income) * 100 : 0;
 
-  const handleIncomeUpdate = async () => {
-    if (profile && income !== profile.monthlyIncome) {
-      await updateProfile({ monthlyIncome: income });
-    }
-  };
+
 
   const handleAddExpense = async () => {
     if (newExpenseCategory && newExpenseAmount) {
@@ -112,12 +109,12 @@ export function BudgetCalculatorPage() {
 
         <TabsContent value="calculator" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Income Input */}
+            {/* Income Display */}
             <Card>
               <CardHeader>
                 <CardTitle>Monthly Income</CardTitle>
                 <CardDescription>
-                  Enter your total monthly income
+                  Your total monthly income - <Link to="/portfolio" className="text-primary hover:underline">Edit in Portfolio</Link>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -128,9 +125,12 @@ export function BudgetCalculatorPage() {
                     type="number"
                     placeholder="₹85,000"
                     value={monthlyIncome}
-                    onChange={(e) => setMonthlyIncome(e.target.value)}
-                    onBlur={handleIncomeUpdate}
+                    readOnly
+                    className="bg-muted cursor-not-allowed"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Income can only be edited in the Portfolio page
+                  </p>
                 </div>
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center">
