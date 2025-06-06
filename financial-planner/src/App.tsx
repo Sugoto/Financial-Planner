@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/app-layout";
 import { HomePage } from "@/pages/home";
 import { BudgetCalculatorPage } from "@/pages/budget-calculator";
 import { SipCalculatorPage } from "@/pages/sip-calculator";
+import "@/lib/database-utils";
 
 function App() {
   return (

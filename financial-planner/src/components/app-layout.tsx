@@ -1,10 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import {
-  Calculator,
-  DollarSign,
-  Home,
-  TrendingUp,
-} from "lucide-react";
+import { Calculator, DollarSign, Home, TrendingUp } from "lucide-react";
 
 import {
   Sidebar,
@@ -40,8 +35,6 @@ const navItems = [
   },
 ];
 
-
-
 interface AppLayoutProps {
   children: React.ReactNode;
 }
@@ -66,13 +59,13 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             </div>
           </SidebarHeader>
-                    <SidebarContent>
+          <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
+                      <SidebarMenuButton
                         tooltip={item.title}
                         asChild
                         isActive={location.pathname === item.url}

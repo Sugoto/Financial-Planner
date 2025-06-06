@@ -16,8 +16,26 @@ import {
   ArrowDownRight,
   Calculator,
 } from "lucide-react";
+import { useDashboardStats, useFinancialGoals } from "@/hooks/useFinancialData";
+import { formatIndianNumber } from "@/lib/utils";
 
 export function HomePage() {
+  const { stats, loading: statsLoading } = useDashboardStats();
+  const { goals, loading: goalsLoading } = useFinancialGoals();
+
+  if (statsLoading || goalsLoading) {
+    return (
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight">
+            Financial Dashboard
+          </h1>
+          <p className="mt-2 text-lg text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       {/* Header */}
@@ -38,7 +56,9 @@ export function HomePage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹2,45,000</div>
+            <div className="text-2xl font-bold">
+              ₹{formatIndianNumber(stats?.totalBalance || 0)}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600 flex items-center">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
@@ -57,7 +77,9 @@ export function HomePage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹85,000</div>
+            <div className="text-2xl font-bold">
+              ₹{formatIndianNumber(stats?.monthlyIncome || 0)}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600 flex items-center">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
@@ -76,7 +98,9 @@ export function HomePage() {
             <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹52,000</div>
+            <div className="text-2xl font-bold">
+              ₹{formatIndianNumber(stats?.monthlyExpenses || 0)}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-red-600 flex items-center">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
@@ -95,7 +119,9 @@ export function HomePage() {
             <PiggyBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹33,000</div>
+            <div className="text-2xl font-bold">
+              ₹{formatIndianNumber(stats?.monthlySavings || 0)}
+            </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600 flex items-center">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
@@ -146,44 +172,43 @@ export function HomePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Emergency Fund</span>
-                <span className="text-sm text-muted-foreground">75%</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2">
-                <div
-                  className="bg-green-600 h-2 rounded-full"
-                  style={{ width: "75%" }}
-                ></div>
-              </div>
-            </div>
+            {goals.map((goal) => {
+              const progress =
+                goal.targetAmount > 0
+                  ? (goal.currentAmount / goal.targetAmount) * 100
+                  : 0;
+              const getProgressColor = (category: string) => {
+                switch (category) {
+                  case "emergency":
+                    return "bg-green-600";
+                  case "house":
+                    return "bg-blue-600";
+                  case "vacation":
+                    return "bg-purple-600";
+                  default:
+                    return "bg-gray-600";
+                }
+              };
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Home Down Payment</span>
-                <span className="text-sm text-muted-foreground">45%</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: "45%" }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Vacation Fund</span>
-                <span className="text-sm text-muted-foreground">90%</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2">
-                <div
-                  className="bg-purple-600 h-2 rounded-full"
-                  style={{ width: "90%" }}
-                ></div>
-              </div>
-            </div>
+              return (
+                <div key={goal.id} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">{goal.name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {progress.toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${getProgressColor(
+                        goal.category
+                      )}`}
+                      style={{ width: `${Math.min(progress, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       </div>

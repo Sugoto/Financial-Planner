@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -20,12 +20,24 @@ import {
   Percent,
 } from "lucide-react";
 import { formatIndianNumber } from "@/lib/utils";
+import { useSipInvestment } from "@/hooks/useFinancialData";
 
 export function SipCalculatorPage() {
+  const { sipData, loading, updateSipInvestment } = useSipInvestment();
+
   const [monthlyInvestment, setMonthlyInvestment] = useState(10000);
   const [expectedReturn, setExpectedReturn] = useState([12]);
   const [investmentPeriod, setInvestmentPeriod] = useState([15]);
   const [lumpSumAmount, setLumpSumAmount] = useState(100000);
+
+  // Update local state when SIP data loads
+  useEffect(() => {
+    if (sipData && !loading) {
+      setMonthlyInvestment(sipData.monthlyInvestment);
+      setExpectedReturn([sipData.expectedReturn]);
+      setInvestmentPeriod([sipData.investmentPeriod]);
+    }
+  }, [sipData, loading]);
 
   // SIP Calculations
   const monthlyRate = expectedReturn[0] / 100 / 12;
@@ -61,6 +73,28 @@ export function SipCalculatorPage() {
   }
 
   const stepUpReturns = stepUpMaturity - stepUpInvestment;
+
+  const handleSipUpdate = async () => {
+    await updateSipInvestment({
+      monthlyInvestment,
+      expectedReturn: expectedReturn[0],
+      investmentPeriod: investmentPeriod[0],
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
+            <TrendingUp className="h-8 w-8" />
+            SIP Calculator
+          </h1>
+          <p className="mt-2 text-lg text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -147,9 +181,9 @@ export function SipCalculatorPage() {
                   </div>
                 </div>
 
-                <Button className="w-full">
+                <Button className="w-full" onClick={handleSipUpdate}>
                   <Calculator className="mr-2 h-4 w-4" />
-                  Recalculate
+                  Save & Recalculate
                 </Button>
               </CardContent>
             </Card>
