@@ -36,8 +36,8 @@ import {
 import { formatIndianNumber } from "@/lib/utils";
 import { useExpenses, useUserProfile } from "@/hooks/useFinancialData";
 
-// Define expense categories with their icons and subtitles
-const EXPENSE_CATEGORIES = [
+// Define expense categories split into Needs and Wants
+const NEEDS_CATEGORIES = [
   {
     id: "rent",
     title: "Rent",
@@ -47,46 +47,75 @@ const EXPENSE_CATEGORIES = [
     bgColor: "bg-blue-100",
   },
   {
-    id: "bills",
-    title: "Bills",
-    subtitle: "Utilities & services",
+    id: "phone-bill",
+    title: "Phone Bill",
+    subtitle: "Mobile & internet services",
     icon: Zap,
     color: "text-yellow-600",
     bgColor: "bg-yellow-100",
   },
   {
-    id: "travel",
-    title: "Travel",
-    subtitle: "Transportation & commute",
-    icon: Car,
-    color: "text-green-600",
-    bgColor: "bg-green-100",
-  },
-  {
-    id: "office-lunch",
-    title: "Office Lunch",
-    subtitle: "Workplace meals",
+    id: "wfh-meals",
+    title: "WFH Meals",
+    subtitle: "Work from home food",
     icon: Coffee,
     color: "text-orange-600",
     bgColor: "bg-orange-100",
   },
   {
-    id: "food",
-    title: "Food",
-    subtitle: "Groceries & dining",
+    id: "travel",
+    title: "Travel",
+    subtitle: "Essential transportation",
+    icon: Car,
+    color: "text-green-600",
+    bgColor: "bg-green-100",
+  },
+  {
+    id: "office",
+    title: "Office",
+    subtitle: "Work-related expenses",
     icon: ShoppingCart,
+    color: "text-gray-600",
+    bgColor: "bg-gray-100",
+  },
+];
+
+const WANTS_CATEGORIES = [
+  {
+    id: "eating-out",
+    title: "Eating Out",
+    subtitle: "Restaurants & dining",
+    icon: Coffee,
     color: "text-red-600",
     bgColor: "bg-red-100",
   },
   {
-    id: "entertainment",
-    title: "Entertainment",
-    subtitle: "Leisure & recreation",
-    icon: Gamepad2,
+    id: "hangout-travel",
+    title: "Hangout Travel",
+    subtitle: "Social & leisure travel",
+    icon: Car,
     color: "text-purple-600",
     bgColor: "bg-purple-100",
   },
+  {
+    id: "movies",
+    title: "Movies",
+    subtitle: "Cinema & entertainment",
+    icon: Gamepad2,
+    color: "text-pink-600",
+    bgColor: "bg-pink-100",
+  },
+  {
+    id: "hotels",
+    title: "Hotels",
+    subtitle: "Accommodation & stays",
+    icon: HomeIcon,
+    color: "text-indigo-600",
+    bgColor: "bg-indigo-100",
+  },
 ];
+
+const ALL_CATEGORIES = [...NEEDS_CATEGORIES, ...WANTS_CATEGORIES];
 
 export function BudgetCalculatorPage() {
   const {
@@ -112,8 +141,10 @@ export function BudgetCalculatorPage() {
 
   // Get expense amount for a specific category
   const getCategoryAmount = (categoryId: string) => {
-    const categoryTitle = EXPENSE_CATEGORIES.find(cat => cat.id === categoryId)?.title;
-    const expense = expenses.find(exp => exp.category === categoryTitle);
+    const categoryTitle = ALL_CATEGORIES.find(
+      (cat) => cat.id === categoryId
+    )?.title;
+    const expense = expenses.find((exp) => exp.category === categoryTitle);
     return expense?.amount || 0;
   };
 
@@ -126,7 +157,10 @@ export function BudgetCalculatorPage() {
   const savingsRate = income > 0 ? (savings / income) * 100 : 0;
   const expenseRate = income > 0 ? (totalExpenses / income) * 100 : 0;
 
-  const handleCategoryAction = (categoryId: string, action: "add" | "subtract") => {
+  const handleCategoryAction = (
+    categoryId: string,
+    action: "add" | "subtract"
+  ) => {
     setCurrentCategory(categoryId);
     setActionType(action);
     setDialogOpen(true);
@@ -139,21 +173,25 @@ export function BudgetCalculatorPage() {
     const amount = parseFloat(inputAmount);
     if (isNaN(amount) || amount <= 0) return;
 
-    const categoryTitle = EXPENSE_CATEGORIES.find(cat => cat.id === currentCategory)?.title;
+    const categoryTitle = ALL_CATEGORIES.find(
+      (cat) => cat.id === currentCategory
+    )?.title;
     if (!categoryTitle) return;
 
-    const existingExpense = expenses.find(exp => exp.category === categoryTitle);
-    
+    const existingExpense = expenses.find(
+      (exp) => exp.category === categoryTitle
+    );
+
     if (existingExpense) {
       const currentAmount = existingExpense.amount;
       let newAmount;
-      
+
       if (actionType === "add") {
         newAmount = currentAmount + amount;
       } else {
         newAmount = Math.max(0, currentAmount - amount);
       }
-      
+
       await updateExpense(existingExpense.id!, { amount: newAmount });
     } else {
       // Create new expense if it doesn't exist
@@ -184,7 +222,9 @@ export function BudgetCalculatorPage() {
     );
   }
 
-  const currentCategoryData = EXPENSE_CATEGORIES.find(cat => cat.id === currentCategory);
+  const currentCategoryData = ALL_CATEGORIES.find(
+    (cat) => cat.id === currentCategory
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -206,75 +246,38 @@ export function BudgetCalculatorPage() {
         </TabsList>
 
         <TabsContent value="calculator" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Budget Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget Summary</CardTitle>
-                <CardDescription>
-                  Overview of your monthly budget
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Total Income</span>
-                    <span className="font-bold text-green-600">
-                      ₹{formatIndianNumber(income)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Total Expenses</span>
-                    <span className="font-bold text-red-600">
-                      ₹{formatIndianNumber(totalExpenses)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t">
-                    <span className="text-sm font-medium">Net Savings</span>
-                    <span
-                      className={`font-bold ${
-                        savings >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      ₹{formatIndianNumber(savings)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Savings Rate</span>
-                    <span>{savingsRate.toFixed(1)}%</span>
-                  </div>
-                  <Progress value={Math.max(0, savingsRate)} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Expense Categories */}
+          {/* Needs Categories */}
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Expenses</CardTitle>
+              <CardTitle className="text-green-700">Needs</CardTitle>
               <CardDescription>
-                Manage your expenses by category
+                Essential expenses you can't avoid
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {EXPENSE_CATEGORIES.map((category) => {
+                {NEEDS_CATEGORIES.map((category) => {
                   const IconComponent = category.icon;
                   const amount = getCategoryAmount(category.id);
-                  
+
                   return (
-                    <Card key={category.id} className="relative">
+                    <Card
+                      key={category.id}
+                      className="relative border-green-200"
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}>
-                            <IconComponent className={`h-5 w-5 ${category.color}`} />
+                          <div
+                            className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                          >
+                            <IconComponent
+                              className={`h-5 w-5 ${category.color}`}
+                            />
                           </div>
                           <div>
-                            <CardTitle className="text-lg">{category.title}</CardTitle>
+                            <CardTitle className="text-lg">
+                              {category.title}
+                            </CardTitle>
                             <CardDescription className="text-sm">
                               {category.subtitle}
                             </CardDescription>
@@ -286,22 +289,26 @@ export function BudgetCalculatorPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleCategoryAction(category.id, "subtract")}
+                            onClick={() =>
+                              handleCategoryAction(category.id, "subtract")
+                            }
                             disabled={amount === 0}
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          
+
                           <div className="text-center">
                             <div className="text-2xl font-bold">
                               ₹{formatIndianNumber(amount)}
                             </div>
                           </div>
-                          
+
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleCategoryAction(category.id, "add")}
+                            onClick={() =>
+                              handleCategoryAction(category.id, "add")
+                            }
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -311,14 +318,80 @@ export function BudgetCalculatorPage() {
                   );
                 })}
               </div>
-              
-              <div className="pt-6 border-t mt-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium">Total Expenses</span>
-                  <span className="text-lg font-bold text-red-600">
-                    ₹{formatIndianNumber(totalExpenses)}
-                  </span>
-                </div>
+            </CardContent>
+          </Card>
+
+          {/* Wants Categories */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-purple-700">Wants</CardTitle>
+              <CardDescription>
+                Lifestyle and entertainment expenses
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {WANTS_CATEGORIES.map((category) => {
+                  const IconComponent = category.icon;
+                  const amount = getCategoryAmount(category.id);
+
+                  return (
+                    <Card
+                      key={category.id}
+                      className="relative border-purple-200"
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                          >
+                            <IconComponent
+                              className={`h-5 w-5 ${category.color}`}
+                            />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">
+                              {category.title}
+                            </CardTitle>
+                            <CardDescription className="text-sm">
+                              {category.subtitle}
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex items-center justify-between">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleCategoryAction(category.id, "subtract")
+                            }
+                            disabled={amount === 0}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              ₹{formatIndianNumber(amount)}
+                            </div>
+                          </div>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleCategoryAction(category.id, "add")
+                            }
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -393,33 +466,76 @@ export function BudgetCalculatorPage() {
               <CardDescription>Your spending by category</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {EXPENSE_CATEGORIES.map((category) => {
-                  const amount = getCategoryAmount(category.id);
-                  const percentage =
-                    totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
-                  
-                  if (amount === 0) return null;
-                  
-                  return (
-                    <div key={category.id} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          {category.title}
-                        </span>
-                        <div className="text-right">
-                          <span className="text-sm font-medium">
-                            ₹{formatIndianNumber(amount)}
-                          </span>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            ({percentage.toFixed(1)}%)
-                          </span>
+              <div className="space-y-6">
+                {/* Needs Breakdown */}
+                <div>
+                  <h4 className="text-lg font-semibold text-green-700 mb-3">
+                    Needs
+                  </h4>
+                  <div className="space-y-3">
+                    {NEEDS_CATEGORIES.map((category) => {
+                      const amount = getCategoryAmount(category.id);
+                      const percentage =
+                        totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
+
+                      if (amount === 0) return null;
+
+                      return (
+                        <div key={category.id} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">
+                              {category.title}
+                            </span>
+                            <div className="text-right">
+                              <span className="text-sm font-medium">
+                                ₹{formatIndianNumber(amount)}
+                              </span>
+                              <span className="text-xs text-muted-foreground ml-2">
+                                ({percentage.toFixed(1)}%)
+                              </span>
+                            </div>
+                          </div>
+                          <Progress value={percentage} className="h-2" />
                         </div>
-                      </div>
-                      <Progress value={percentage} className="h-2" />
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Wants Breakdown */}
+                <div>
+                  <h4 className="text-lg font-semibold text-purple-700 mb-3">
+                    Wants
+                  </h4>
+                  <div className="space-y-3">
+                    {WANTS_CATEGORIES.map((category) => {
+                      const amount = getCategoryAmount(category.id);
+                      const percentage =
+                        totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
+
+                      if (amount === 0) return null;
+
+                      return (
+                        <div key={category.id} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">
+                              {category.title}
+                            </span>
+                            <div className="text-right">
+                              <span className="text-sm font-medium">
+                                ₹{formatIndianNumber(amount)}
+                              </span>
+                              <span className="text-xs text-muted-foreground ml-2">
+                                ({percentage.toFixed(1)}%)
+                              </span>
+                            </div>
+                          </div>
+                          <Progress value={percentage} className="h-2" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -434,8 +550,8 @@ export function BudgetCalculatorPage() {
               {actionType === "add" ? "Add" : "Subtract"} Amount
             </DialogTitle>
             <DialogDescription>
-              {actionType === "add" ? "Add money to" : "Subtract money from"} your{" "}
-              {currentCategoryData?.title} budget.
+              {actionType === "add" ? "Add money to" : "Subtract money from"}{" "}
+              your {currentCategoryData?.title} budget.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
