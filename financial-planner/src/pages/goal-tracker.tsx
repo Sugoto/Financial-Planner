@@ -1,15 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, Target, Calendar, DollarSign } from "lucide-react";
+import { TrendingUp, Target, DollarSign } from "lucide-react";
 import {
   useDashboardStats,
   usePortfolioItems,
@@ -33,19 +27,23 @@ interface GoalCalculationResult {
 const TARGET_AMOUNT = 10000000; // 1 Cr
 const INFLATION_RATE = 0.06; // 6% annual inflation
 const EXPECTED_RETURN = 0.12; // 12% annual return (default)
+const SAVINGS_RETURN = 0.03; // 3% annual return for savings account
 
 const calculateTimeToReachGoal = (
   currentAmount: number,
   targetAmount: number,
-  monthlyContribution: number,
-  annualReturn: number,
+  monthlyInvestment: number,
+  monthlySavings: number,
+  investmentReturn: number,
+  savingsReturn: number,
   inflationRate: number = 0
 ) => {
-  if (monthlyContribution <= 0) {
+  if (monthlyInvestment <= 0 && monthlySavings <= 0) {
     return { months: Infinity, years: Infinity };
   }
 
-  const monthlyReturn = (annualReturn - inflationRate) / 12;
+  const monthlyInvestmentReturn = (investmentReturn - inflationRate) / 12;
+  const monthlySavingsReturn = (savingsReturn - inflationRate) / 12;
   const adjustedTarget = targetAmount;
 
   if (currentAmount >= adjustedTarget) {
@@ -53,11 +51,14 @@ const calculateTimeToReachGoal = (
   }
 
   let months = 0;
-  let amount = currentAmount;
+  let investmentAmount = currentAmount;
+  let savingsAmount = 0;
 
-  while (amount < adjustedTarget && months < 600) {
+  while (investmentAmount + savingsAmount < adjustedTarget && months < 600) {
     // Cap at 50 years
-    amount = amount * (1 + monthlyReturn) + monthlyContribution;
+    investmentAmount =
+      investmentAmount * (1 + monthlyInvestmentReturn) + monthlyInvestment;
+    savingsAmount = savingsAmount * (1 + monthlySavingsReturn) + monthlySavings;
     months++;
   }
 
@@ -71,24 +72,37 @@ const calculateRequiredMonthlyInvestment = (
   currentAmount: number,
   targetAmount: number,
   timeYears: number,
-  annualReturn: number
+  investmentReturn: number,
+  savingsReturn: number,
+  monthlySavings: number
 ) => {
-  const monthlyReturn = annualReturn / 12;
+  const monthlyInvestmentReturn = investmentReturn / 12;
+  const monthlySavingsReturn = savingsReturn / 12;
   const totalMonths = timeYears * 12;
 
   if (totalMonths <= 0) return 0;
 
+  // Calculate future value of current investment amount
   const futureValueOfCurrent =
-    currentAmount * Math.pow(1 + monthlyReturn, totalMonths);
-  const remainingAmount = targetAmount - futureValueOfCurrent;
+    currentAmount * Math.pow(1 + monthlyInvestmentReturn, totalMonths);
+
+  // Calculate future value of savings contributions
+  const futureValueOfSavings =
+    monthlySavings *
+    ((Math.pow(1 + monthlySavingsReturn, totalMonths) - 1) /
+      monthlySavingsReturn);
+
+  const remainingAmount =
+    targetAmount - futureValueOfCurrent - futureValueOfSavings;
 
   if (remainingAmount <= 0) return 0;
 
-  const monthlyPayment =
+  const monthlyInvestmentPayment =
     remainingAmount /
-    ((Math.pow(1 + monthlyReturn, totalMonths) - 1) / monthlyReturn);
+    ((Math.pow(1 + monthlyInvestmentReturn, totalMonths) - 1) /
+      monthlyInvestmentReturn);
 
-  return Math.max(0, monthlyPayment);
+  return Math.max(0, monthlyInvestmentPayment);
 };
 
 export function GoalTrackerPage() {
@@ -111,16 +125,19 @@ export function GoalTrackerPage() {
     );
     const currentNetWorth = portfolioTotal;
 
-    // Calculate monthly savings available for investment
-    const availableForInvestment = 100000;
+    // Monthly amounts
+    const monthlyInvestment = 100000; // ₹1 lac for investments at 12% return
+    const monthlySavings = 60000; // ₹60k for savings account at 4% return
 
     // Calculate time without inflation
     const { months: monthsWithoutInflation, years: yearsWithoutInflation } =
       calculateTimeToReachGoal(
         currentNetWorth,
         TARGET_AMOUNT,
-        availableForInvestment,
+        monthlyInvestment,
+        monthlySavings,
         EXPECTED_RETURN,
+        SAVINGS_RETURN,
         0
       );
 
@@ -131,8 +148,10 @@ export function GoalTrackerPage() {
       calculateTimeToReachGoal(
         currentNetWorth,
         inflationAdjustedTarget,
-        availableForInvestment,
+        monthlyInvestment,
+        monthlySavings,
         EXPECTED_RETURN,
+        SAVINGS_RETURN,
         INFLATION_RATE
       );
 
@@ -148,12 +167,14 @@ export function GoalTrackerPage() {
       currentNetWorth,
       currentTarget,
       targetTimeYears,
-      EXPECTED_RETURN
+      EXPECTED_RETURN,
+      SAVINGS_RETURN,
+      monthlySavings
     );
 
     const shortfall = Math.max(
       0,
-      requiredMonthlyInvestment - availableForInvestment
+      requiredMonthlyInvestment - monthlyInvestment
     );
 
     setCalculation({
@@ -163,7 +184,7 @@ export function GoalTrackerPage() {
       yearsWithInflation,
       currentNetWorth,
       targetAmount: currentTarget,
-      monthlyContribution: availableForInvestment,
+      monthlyContribution: monthlyInvestment + monthlySavings,
       progress,
       requiredMonthlyInvestment,
       shortfall,
@@ -238,7 +259,17 @@ export function GoalTrackerPage() {
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">Progress</span>
               <span className="text-lg font-bold text-blue-600">
-                {calculation?.progress.toFixed(1)}%
+                {inflationAdjusted
+                  ? calculation?.yearsWithInflation === Infinity
+                    ? "∞ years"
+                    : `${calculation?.yearsWithInflation}y ${
+                        (calculation?.monthsWithInflation || 0) % 12
+                      }m left`
+                  : calculation?.yearsWithoutInflation === Infinity
+                  ? "∞ years"
+                  : `${calculation?.yearsWithoutInflation}y ${
+                      (calculation?.monthsWithoutInflation || 0) % 12
+                    }m left`}
               </span>
             </div>
             <Progress
@@ -301,68 +332,26 @@ export function GoalTrackerPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ₹{formatIndianNumber(calculation?.monthlyContribution || 0)}
+              ₹{formatIndianNumber(100000)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Available monthly savings
+              at 12% annual return
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Progress</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Monthly Savings
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {calculation?.progress.toFixed(1)}%
+              ₹{formatIndianNumber(60000)}
             </div>
-            <p className="text-xs text-muted-foreground">Goal completion</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Time to Goal */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Time to Reach Goal
-            </CardTitle>
-            <CardDescription>
-              Based on current savings and investment rate
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Without Inflation:</span>
-                <span className="text-lg font-bold text-green-600">
-                  {calculation?.yearsWithoutInflation === Infinity
-                    ? "∞"
-                    : `${calculation?.yearsWithoutInflation} years ${
-                        (calculation?.monthsWithoutInflation || 0) % 12
-                      } months`}
-                </span>
-              </div>
-
-              {inflationAdjusted && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">
-                    With 6% Inflation:
-                  </span>
-                  <span className="text-lg font-bold text-orange-600">
-                    {calculation?.yearsWithInflation === Infinity
-                      ? "∞"
-                      : `${calculation?.yearsWithInflation} years ${
-                          (calculation?.monthsWithInflation || 0) % 12
-                        } months`}
-                  </span>
-                </div>
-              )}
-            </div>
+            <p className="text-xs text-muted-foreground">at 3% annual return</p>
           </CardContent>
         </Card>
       </div>
