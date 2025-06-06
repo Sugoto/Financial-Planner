@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Calculator, DollarSign, Home, TrendingUp, Wallet } from "lucide-react";
+import { Calculator, Home, TrendingUp, Wallet } from "lucide-react";
 
 import {
   Sidebar,
@@ -7,7 +7,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -49,21 +48,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full bg-background">
-        <Sidebar variant="inset">
-          <SidebarHeader>
-            <div className="flex items-center gap-2 px-4 py-2">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <DollarSign className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">
-                  Financial Planner
-                </span>
-                <span className="truncate text-xs">Personal Finance</span>
-              </div>
-            </div>
-          </SidebarHeader>
+      <div className="flex h-screen w-full bg-background mt-10">
+        <Sidebar variant="floating">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
