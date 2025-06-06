@@ -31,6 +31,8 @@ import {
   Pin,
   Smile,
   Apple,
+  Gift,
+  Utensils,
 } from "lucide-react";
 import { formatIndianNumber } from "@/lib/utils";
 import { useExpenses, useUserProfile } from "@/hooks/useFinancialData";
@@ -138,6 +140,38 @@ const WANTS_CATEGORIES = [
   },
 ];
 
+// Define bonus categories (isolated from budget calculations)
+const BONUS_LIST = [
+  {
+    title: "Office Lunch",
+    subtitle: "Daily office lunch expenses",
+    amount: 10000,
+    icon: Utensils,
+    color: "text-orange-600",
+    bgColor: "bg-orange-100",
+    isFixed: true,
+  },
+  {
+    title: "Office Snacks",
+    subtitle: "Office snacks & beverages",
+    amount: 1000,
+    icon: Coffee,
+    color: "text-brown-600",
+    bgColor: "bg-amber-100",
+    isFixed: true,
+  },
+  {
+    id: "bonusly",
+    title: "Bonusly",
+    subtitle: "Variable bonus expenses",
+    amount: 0,
+    icon: Gift,
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-100",
+    isFixed: false,
+  },
+];
+
 const ALL_CATEGORIES = [...WANTS_CATEGORIES];
 
 export function BudgetCalculatorPage() {
@@ -155,6 +189,9 @@ export function BudgetCalculatorPage() {
   const [actionType, setActionType] = useState<"add" | "subtract">("add");
   const [inputAmount, setInputAmount] = useState("");
 
+  // State for bonus variable amount
+  const [bonuslyAmount, setBonuslyAmount] = useState(0);
+
   // Get expense amount for a specific category
   const getCategoryAmount = (categoryId: string) => {
     const categoryTitle = ALL_CATEGORIES.find(
@@ -170,6 +207,15 @@ export function BudgetCalculatorPage() {
     categoryId: string,
     action: "add" | "subtract"
   ) => {
+    // Handle bonus category separately
+    if (categoryId === "bonusly") {
+      setCurrentCategory(categoryId);
+      setActionType(action);
+      setDialogOpen(true);
+      setInputAmount("");
+      return;
+    }
+
     setCurrentCategory(categoryId);
     setActionType(action);
     setDialogOpen(true);
@@ -181,6 +227,19 @@ export function BudgetCalculatorPage() {
 
     const amount = parseFloat(inputAmount);
     if (isNaN(amount) || amount <= 0) return;
+
+    // Handle bonus category separately
+    if (currentCategory === "bonusly") {
+      if (actionType === "add") {
+        setBonuslyAmount((prev) => prev + amount);
+      } else {
+        setBonuslyAmount((prev) => Math.max(0, prev - amount));
+      }
+      setDialogOpen(false);
+      setInputAmount("");
+      setCurrentCategory("");
+      return;
+    }
 
     const categoryTitle = ALL_CATEGORIES.find(
       (cat) => cat.id === currentCategory
@@ -365,6 +424,88 @@ export function BudgetCalculatorPage() {
       </div>
 
       {/* Budget Calculator */}
+      {/* Bonus Section */}
+      <div>
+        <CardHeader className="pb-5">
+          <CardTitle className="text-orange-700 flex items-center gap-2">
+            <Gift className="h-5 w-5" />
+            Bonus
+          </CardTitle>
+          <CardDescription>
+            Additional expenses not included in budget calculations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {BONUS_LIST.map((category, index) => {
+              const IconComponent = category.icon;
+              const amount = category.isFixed
+                ? category.amount
+                : category.id === "bonusly"
+                ? bonuslyAmount
+                : category.amount;
+
+              return (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 border rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                    >
+                      <IconComponent className={`h-5 w-5 ${category.color}`} />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm">
+                        {category.title}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {category.subtitle}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    {!category.isFixed && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleCategoryAction(category.id!, "subtract")
+                          }
+                          disabled={amount === 0}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+
+                    <div className="text-sm font-bold min-w-[80px] text-center">
+                      ₹{formatIndianNumber(amount)}
+                    </div>
+
+                    {!category.isFixed && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleCategoryAction(category.id!, "add")
+                        }
+                        className="h-7 w-7 p-0"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Needs Categories */}
         <div>
