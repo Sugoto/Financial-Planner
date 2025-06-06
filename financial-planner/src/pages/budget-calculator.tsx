@@ -29,56 +29,42 @@ import {
   Minus,
   Heart,
   ShoppingCart,
+  Pin,
+  Smile,
 } from "lucide-react";
 import { formatIndianNumber } from "@/lib/utils";
 import { useExpenses, useUserProfile } from "@/hooks/useFinancialData";
 
-// Define expense categories split into Needs and Wants
-const NEEDS_CATEGORIES = [
+// Define needs as a simple list with predefined amounts
+const NEEDS_LIST = [
   {
-    id: "rent",
     title: "Rent",
     subtitle: "Monthly housing cost",
+    amount: 25000,
     icon: HomeIcon,
     color: "text-blue-600",
     bgColor: "bg-blue-100",
   },
   {
-    id: "phone-bill",
     title: "Phone Bill",
     subtitle: "Mobile & internet services",
+    amount: 333,
     icon: Zap,
     color: "text-yellow-600",
     bgColor: "bg-yellow-100",
   },
   {
-    id: "health",
-    title: "Health",
-    subtitle: "Gym & medicines",
+    title: "Gym",
+    subtitle: "Health & fitness",
+    amount: 1500,
     icon: Heart,
     color: "text-red-600",
     bgColor: "bg-red-100",
   },
   {
-    id: "wfh-meals",
-    title: "Home Meals",
-    subtitle: "Ordering food at home",
-    icon: Coffee,
-    color: "text-orange-600",
-    bgColor: "bg-orange-100",
-  },
-  {
-    id: "travel",
-    title: "Travel",
-    subtitle: "Essential transportation",
-    icon: Car,
-    color: "text-green-600",
-    bgColor: "bg-green-100",
-  },
-  {
-    id: "essentials",
-    title: "Essentials",
-    subtitle: "Groceries, toiletries, etc.",
+    title: "Toiletries",
+    subtitle: "Personal care essentials",
+    amount: 1000,
     icon: ShoppingCart,
     color: "text-gray-600",
     bgColor: "bg-gray-100",
@@ -136,7 +122,7 @@ const WANTS_CATEGORIES = [
   },
 ];
 
-const ALL_CATEGORIES = [...NEEDS_CATEGORIES, ...WANTS_CATEGORIES];
+const ALL_CATEGORIES = [...WANTS_CATEGORIES];
 
 export function BudgetCalculatorPage() {
   const {
@@ -240,8 +226,8 @@ export function BudgetCalculatorPage() {
   );
 
   // Calculate needs vs wants breakdown
-  const needsTotal = NEEDS_CATEGORIES.reduce((sum, category) => {
-    return sum + getCategoryAmount(category.id);
+  const needsTotal = NEEDS_LIST.reduce((sum: number, category) => {
+    return sum + category.amount;
   }, 0);
 
   const wantsTotal = WANTS_CATEGORIES.reduce((sum, category) => {
@@ -344,69 +330,47 @@ export function BudgetCalculatorPage() {
         {/* Needs Categories */}
         <div>
           <CardHeader className="pb-5">
-            <CardTitle className="text-green-700">Needs</CardTitle>
+            <CardTitle className="text-green-700 flex items-center gap-2">
+              <Pin className="h-5 w-5" />
+              Needs
+            </CardTitle>
             <CardDescription>
-              Essential expenses you can't avoid
+              Fixed essential expenses that don't change monthly
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {NEEDS_CATEGORIES.map((category) => {
+            <div className="space-y-4">
+              {NEEDS_LIST.map((category, index) => {
                 const IconComponent = category.icon;
-                const amount = getCategoryAmount(category.id);
+                const amount = category.amount;
 
                 return (
-                  <Card key={category.id} className="relative">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
-                        >
-                          <IconComponent
-                            className={`h-5 w-5 ${category.color}`}
-                          />
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                      >
+                        <IconComponent
+                          className={`h-5 w-5 ${category.color}`}
+                        />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-lg">
+                          {category.title}
                         </div>
-                        <div>
-                          <CardTitle className="text-lg">
-                            {category.title}
-                          </CardTitle>
-                          <CardDescription className="text-sm">
-                            {category.subtitle}
-                          </CardDescription>
+                        <div className="text-sm text-muted-foreground">
+                          {category.subtitle}
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex items-center justify-between">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleCategoryAction(category.id, "subtract")
-                          }
-                          disabled={amount === 0}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
+                    </div>
 
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">
-                            ₹{formatIndianNumber(amount)}
-                          </div>
-                        </div>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleCategoryAction(category.id, "add")
-                          }
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <div className="text-xl font-bold min-w-[120px] text-center">
+                      ₹{formatIndianNumber(amount)}
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -416,9 +380,12 @@ export function BudgetCalculatorPage() {
         {/* Wants Categories */}
         <div>
           <CardHeader className="pb-5">
-            <CardTitle className="text-purple-700">Wants</CardTitle>
+            <CardTitle className="text-purple-700 flex items-center gap-2">
+              <Smile className="h-5 w-5" />
+              Wants
+            </CardTitle>
             <CardDescription>
-              Lifestyle and entertainment expenses
+              Variable lifestyle and entertainment expenses
             </CardDescription>
           </CardHeader>
           <CardContent>
