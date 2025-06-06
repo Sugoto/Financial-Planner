@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CardContent,
   CardDescription,
@@ -13,7 +13,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -33,6 +32,7 @@ import {
   Apple,
   Gift,
   Utensils,
+  Edit3,
 } from "lucide-react";
 import { formatIndianNumber } from "@/lib/utils";
 import { useExpenses, useUserProfile } from "@/hooks/useFinancialData";
@@ -186,11 +186,18 @@ export function BudgetCalculatorPage() {
   const [monthlyBudget, setMonthlyBudget] = useState("40000");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>("");
-  const [actionType, setActionType] = useState<"add" | "subtract">("add");
-  const [inputAmount, setInputAmount] = useState("");
+  const [inputAmount, setInputAmount] = useState("100");
 
   // State for bonus variable amount
   const [bonuslyAmount, setBonuslyAmount] = useState(0);
+
+  // Initialize bonusly amount from database when expenses load
+  useEffect(() => {
+    const bonusExpense = expenses.find((exp) => exp.category === "Bonusly");
+    if (bonusExpense) {
+      setBonuslyAmount(bonusExpense.amount);
+    }
+  }, [expenses]);
 
   // Get expense amount for a specific category
   const getCategoryAmount = (categoryId: string) => {
@@ -203,41 +210,43 @@ export function BudgetCalculatorPage() {
 
   const budget = parseFloat(monthlyBudget) || 0;
 
-  const handleCategoryAction = (
-    categoryId: string,
-    action: "add" | "subtract"
-  ) => {
-    // Handle bonus category separately
-    if (categoryId === "bonusly") {
-      setCurrentCategory(categoryId);
-      setActionType(action);
-      setDialogOpen(true);
-      setInputAmount("");
-      return;
-    }
-
+  const handleCategoryEdit = (categoryId: string) => {
     setCurrentCategory(categoryId);
-    setActionType(action);
     setDialogOpen(true);
-    setInputAmount("");
   };
 
-  const handleConfirmAction = async () => {
-    if (!inputAmount || !currentCategory) return;
+  const handleAmountAction = async (action: "add" | "subtract") => {
+    if (!currentCategory) return;
 
-    const amount = parseFloat(inputAmount);
-    if (isNaN(amount) || amount <= 0) return;
+    const changeAmount = parseFloat(inputAmount) || 0;
+    if (changeAmount <= 0) return;
 
     // Handle bonus category separately
     if (currentCategory === "bonusly") {
-      if (actionType === "add") {
-        setBonuslyAmount((prev) => prev + amount);
+      let newBonusAmount = 0;
+      if (action === "add") {
+        newBonusAmount = bonuslyAmount + changeAmount;
       } else {
-        setBonuslyAmount((prev) => Math.max(0, prev - amount));
+        newBonusAmount = Math.max(0, bonuslyAmount - changeAmount);
       }
-      setDialogOpen(false);
-      setInputAmount("");
-      setCurrentCategory("");
+
+      setBonuslyAmount(newBonusAmount);
+
+      // Save to database
+      const existingBonusExpense = expenses.find(
+        (exp) => exp.category === "Bonusly"
+      );
+
+      if (existingBonusExpense) {
+        await updateExpense(existingBonusExpense.id!, {
+          amount: newBonusAmount,
+        });
+      } else if (newBonusAmount > 0) {
+        await addExpense({
+          category: "Bonusly",
+          amount: newBonusAmount,
+        });
+      }
       return;
     }
 
@@ -250,35 +259,21 @@ export function BudgetCalculatorPage() {
       (exp) => exp.category === categoryTitle
     );
 
+    let newAmount = 0;
     if (existingExpense) {
       const currentAmount = existingExpense.amount;
-      let newAmount;
-
-      if (actionType === "add") {
-        newAmount = currentAmount + amount;
+      if (action === "add") {
+        newAmount = currentAmount + changeAmount;
       } else {
-        newAmount = Math.max(0, currentAmount - amount);
+        newAmount = Math.max(0, currentAmount - changeAmount);
       }
-
       await updateExpense(existingExpense.id!, { amount: newAmount });
-    } else {
-      // Create new expense if it doesn't exist
-      if (actionType === "add") {
-        await addExpense({
-          category: categoryTitle,
-          amount: amount,
-        });
-      }
-    }
-
-    setDialogOpen(false);
-    setInputAmount("");
-    setCurrentCategory("");
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleConfirmAction();
+    } else if (action === "add") {
+      // Create new expense if it doesn't exist and we're adding
+      await addExpense({
+        category: categoryTitle,
+        amount: changeAmount,
+      });
     }
   };
 
@@ -296,9 +291,10 @@ export function BudgetCalculatorPage() {
     );
   }
 
-  const currentCategoryData = ALL_CATEGORIES.find(
-    (cat) => cat.id === currentCategory
-  );
+  const currentCategoryData =
+    currentCategory === "bonusly"
+      ? BONUS_LIST.find((cat) => cat.id === "bonusly")
+      : ALL_CATEGORIES.find((cat) => cat.id === currentCategory);
 
   // Calculate needs vs wants breakdown
   const needsTotal = NEEDS_LIST.reduce((sum: number, category) => {
@@ -467,22 +463,6 @@ export function BudgetCalculatorPage() {
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    {!category.isFixed && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleCategoryAction(category.id!, "subtract")
-                          }
-                          disabled={amount === 0}
-                          className="h-7 w-7 p-0"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                      </>
-                    )}
-
                     <div className="text-sm font-bold min-w-[80px] text-center">
                       ₹{formatIndianNumber(amount)}
                     </div>
@@ -491,12 +471,10 @@ export function BudgetCalculatorPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          handleCategoryAction(category.id!, "add")
-                        }
+                        onClick={() => handleCategoryEdit(category.id!)}
                         className="h-7 w-7 p-0"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Edit3 className="h-3 w-3" />
                       </Button>
                     )}
                   </div>
@@ -598,18 +576,6 @@ export function BudgetCalculatorPage() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleCategoryAction(category.id, "subtract")
-                        }
-                        disabled={amount === 0}
-                        className="h-7 w-7 p-0"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-
                       <div className="text-sm font-bold min-w-[60px] text-center">
                         ₹{formatIndianNumber(amount)}
                       </div>
@@ -617,10 +583,10 @@ export function BudgetCalculatorPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleCategoryAction(category.id, "add")}
+                        onClick={() => handleCategoryEdit(category.id)}
                         className="h-7 w-7 p-0"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Edit3 className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
@@ -631,46 +597,67 @@ export function BudgetCalculatorPage() {
         </div>
       </div>
 
-      {/* Amount Input Dialog */}
+      {/* Amount Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
-            <DialogTitle>
-              {actionType === "add" ? "Add" : "Subtract"} Amount
-            </DialogTitle>
+            <DialogTitle>Edit Amount</DialogTitle>
             <DialogDescription>
-              {actionType === "add" ? "Add money to" : "Subtract money from"}{" "}
-              your {currentCategoryData?.title} budget.
+              Adjust the amount for {currentCategoryData?.title}.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amount" className="text-right">
-                Amount
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                value={inputAmount}
-                onChange={(e) => setInputAmount(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="col-span-3"
-              />
+          <div className="grid gap-6 py-6">
+            <div className="flex items-center justify-center space-x-6">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleAmountAction("subtract")}
+                className="h-14 w-14 p-0 rounded-full"
+              >
+                <Minus className="h-6 w-6" />
+              </Button>
+
+              <div className="flex flex-col items-center space-y-3">
+                <Label htmlFor="amount" className="text-sm font-medium">
+                  Change Amount
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                    ₹
+                  </span>
+                  <Input
+                    id="amount"
+                    type="text"
+                    value={formatIndianNumber(parseFloat(inputAmount) || 0)}
+                    onChange={(e) => {
+                      const numericValue = e.target.value.replace(/[^\d]/g, "");
+                      setInputAmount(numericValue);
+                    }}
+                    className="pl-8 w-36 text-center text-lg font-semibold"
+                    placeholder="100"
+                  />
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleAmountAction("add")}
+                className="h-14 w-14 p-0 rounded-full"
+              >
+                <Plus className="h-6 w-6" />
+              </Button>
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Current: ₹
+              {formatIndianNumber(
+                currentCategory === "bonusly"
+                  ? bonuslyAmount
+                  : getCategoryAmount(currentCategory)
+              )}
             </div>
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleConfirmAction}>
-              {actionType === "add" ? "Add" : "Subtract"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
