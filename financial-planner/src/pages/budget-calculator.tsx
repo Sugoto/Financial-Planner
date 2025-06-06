@@ -19,6 +19,7 @@ import {
   TrendingDown,
   Calculator
 } from "lucide-react";
+import { formatIndianNumber } from "@/lib/utils";
 
 interface ExpenseItem {
   id: number;
@@ -110,7 +111,7 @@ export function BudgetCalculatorPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Monthly Income</span>
                     <span className="text-lg font-bold text-green-600">
-                      ₹{income.toLocaleString()}
+                      ₹{formatIndianNumber(income)}
                     </span>
                   </div>
                 </div>
@@ -127,16 +128,16 @@ export function BudgetCalculatorPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total Income</span>
-                    <span className="font-bold text-green-600">₹{income.toLocaleString()}</span>
+                    <span className="font-bold text-green-600">₹{formatIndianNumber(income)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total Expenses</span>
-                    <span className="font-bold text-red-600">₹{totalExpenses.toLocaleString()}</span>
+                    <span className="font-bold text-red-600">₹{formatIndianNumber(totalExpenses)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="text-sm font-medium">Net Savings</span>
                     <span className={`font-bold ${savings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ₹{savings.toLocaleString()}
+                      ₹{formatIndianNumber(savings)}
                     </span>
                   </div>
                 </div>
@@ -223,7 +224,7 @@ export function BudgetCalculatorPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-medium">Total Expenses</span>
                   <span className="text-lg font-bold text-red-600">
-                    ₹{totalExpenses.toLocaleString()}
+                    ₹{formatIndianNumber(totalExpenses)}
                   </span>
                 </div>
               </div>
@@ -267,7 +268,7 @@ export function BudgetCalculatorPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₹{(savings * 12).toLocaleString()}</div>
+                <div className="text-2xl font-bold">₹{formatIndianNumber(savings * 12)}</div>
                 <p className="text-xs text-muted-foreground">
                   Projected annual savings
                 </p>
@@ -289,7 +290,7 @@ export function BudgetCalculatorPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">{expense.category}</span>
                         <div className="text-right">
-                          <span className="text-sm font-medium">₹{expense.amount.toLocaleString()}</span>
+                          <span className="text-sm font-medium">₹{formatIndianNumber(expense.amount)}</span>
                           <span className="text-xs text-muted-foreground ml-2">
                             ({percentage.toFixed(1)}%)
                           </span>

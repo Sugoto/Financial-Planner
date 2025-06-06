@@ -11,14 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  TrendingUp, 
+import {
+  TrendingUp,
   Calculator,
   DollarSign,
   Target,
   Calendar,
-  Percent
+  Percent,
 } from "lucide-react";
+import { formatIndianNumber } from "@/lib/utils";
 
 export function SipCalculatorPage() {
   const [monthlyInvestment, setMonthlyInvestment] = useState(10000);
@@ -30,29 +31,35 @@ export function SipCalculatorPage() {
   const monthlyRate = expectedReturn[0] / 100 / 12;
   const totalMonths = investmentPeriod[0] * 12;
   const totalInvestment = monthlyInvestment * totalMonths;
-  
+
   // Future Value of SIP formula: PMT * [((1 + r)^n - 1) / r] * (1 + r)
-  const maturityAmount = monthlyInvestment * 
-    (((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) * (1 + monthlyRate));
-  
+  const maturityAmount =
+    monthlyInvestment *
+    (((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) *
+      (1 + monthlyRate));
+
   const totalReturns = maturityAmount - totalInvestment;
 
   // Lump Sum Calculations
-  const lumpSumMaturity = lumpSumAmount * Math.pow(1 + expectedReturn[0] / 100, investmentPeriod[0]);
+  const lumpSumMaturity =
+    lumpSumAmount * Math.pow(1 + expectedReturn[0] / 100, investmentPeriod[0]);
   const lumpSumReturns = lumpSumMaturity - lumpSumAmount;
 
   // Step-up SIP (assuming 10% annual increase)
-  const stepUpRate = 0.10;
+  const stepUpRate = 0.1;
   let stepUpMaturity = 0;
   let stepUpInvestment = 0;
-  
+
   for (let year = 1; year <= investmentPeriod[0]; year++) {
-    const yearlyInvestment = monthlyInvestment * Math.pow(1 + stepUpRate, year - 1) * 12;
+    const yearlyInvestment =
+      monthlyInvestment * Math.pow(1 + stepUpRate, year - 1) * 12;
     const yearsRemaining = investmentPeriod[0] - year + 1;
-    stepUpMaturity += yearlyInvestment * Math.pow(1 + expectedReturn[0] / 100, yearsRemaining - 1);
+    stepUpMaturity +=
+      yearlyInvestment *
+      Math.pow(1 + expectedReturn[0] / 100, yearsRemaining - 1);
     stepUpInvestment += yearlyInvestment;
   }
-  
+
   const stepUpReturns = stepUpMaturity - stepUpInvestment;
 
   return (
@@ -64,7 +71,8 @@ export function SipCalculatorPage() {
           SIP Calculator
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">
-          Calculate your Systematic Investment Plan returns and plan your investments
+          Calculate your Systematic Investment Plan returns and plan your
+          investments
         </p>
       </div>
 
@@ -92,9 +100,13 @@ export function SipCalculatorPage() {
                     id="monthly-investment"
                     type="number"
                     value={monthlyInvestment}
-                    onChange={(e) => setMonthlyInvestment(Number(e.target.value))}
+                    onChange={(e) =>
+                      setMonthlyInvestment(Number(e.target.value))
+                    }
                   />
-                  <p className="text-sm text-muted-foreground">₹{monthlyInvestment.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">
+                    ₹{formatIndianNumber(monthlyInvestment)}
+                  </p>
                 </div>
 
                 <div className="space-y-3">
@@ -109,7 +121,9 @@ export function SipCalculatorPage() {
                   />
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>1%</span>
-                    <span className="font-medium">{expectedReturn[0]}% per annum</span>
+                    <span className="font-medium">
+                      {expectedReturn[0]}% per annum
+                    </span>
                     <span>25%</span>
                   </div>
                 </div>
@@ -126,7 +140,9 @@ export function SipCalculatorPage() {
                   />
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>1 year</span>
-                    <span className="font-medium">{investmentPeriod[0]} years</span>
+                    <span className="font-medium">
+                      {investmentPeriod[0]} years
+                    </span>
                     <span>30 years</span>
                   </div>
                 </div>
@@ -142,31 +158,37 @@ export function SipCalculatorPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Investment Results</CardTitle>
-                <CardDescription>Your SIP investment projection</CardDescription>
+                <CardDescription>
+                  Your SIP investment projection
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 border rounded-lg">
                     <DollarSign className="h-6 w-6 mx-auto text-blue-600 mb-2" />
                     <div className="text-2xl font-bold text-blue-600">
-                      ₹{totalInvestment.toLocaleString()}
+                      ₹{formatIndianNumber(totalInvestment)}
                     </div>
-                    <p className="text-sm text-muted-foreground">Total Investment</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Investment
+                    </p>
                   </div>
-                  
+
                   <div className="text-center p-4 border rounded-lg">
                     <Target className="h-6 w-6 mx-auto text-green-600 mb-2" />
                     <div className="text-2xl font-bold text-green-600">
-                      ₹{maturityAmount.toLocaleString()}
+                      ₹{formatIndianNumber(maturityAmount)}
                     </div>
-                    <p className="text-sm text-muted-foreground">Maturity Amount</p>
+                    <p className="text-sm text-muted-foreground">
+                      Maturity Amount
+                    </p>
                   </div>
                 </div>
 
                 <div className="text-center p-4 border rounded-lg bg-green-50">
                   <TrendingUp className="h-6 w-6 mx-auto text-green-600 mb-2" />
                   <div className="text-3xl font-bold text-green-600">
-                    ₹{totalReturns.toLocaleString()}
+                    ₹{formatIndianNumber(totalReturns)}
                   </div>
                   <p className="text-sm text-muted-foreground">Total Returns</p>
                 </div>
@@ -174,17 +196,23 @@ export function SipCalculatorPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Investment</span>
-                    <span>{((totalInvestment / maturityAmount) * 100).toFixed(1)}%</span>
+                    <span>
+                      {((totalInvestment / maturityAmount) * 100).toFixed(1)}%
+                    </span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-3">
-                    <div 
-                      className="bg-blue-600 h-3 rounded-full" 
-                      style={{width: `${(totalInvestment / maturityAmount) * 100}%`}}
+                    <div
+                      className="bg-blue-600 h-3 rounded-full"
+                      style={{
+                        width: `${(totalInvestment / maturityAmount) * 100}%`,
+                      }}
                     ></div>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Returns</span>
-                    <span>{((totalReturns / maturityAmount) * 100).toFixed(1)}%</span>
+                    <span>
+                      {((totalReturns / maturityAmount) * 100).toFixed(1)}%
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -195,7 +223,9 @@ export function SipCalculatorPage() {
           <Card>
             <CardHeader>
               <CardTitle>Investment Breakdown</CardTitle>
-              <CardDescription>Detailed analysis of your SIP investment</CardDescription>
+              <CardDescription>
+                Detailed analysis of your SIP investment
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-4">
@@ -204,23 +234,29 @@ export function SipCalculatorPage() {
                   <div className="text-xl font-bold">{totalMonths}</div>
                   <p className="text-sm text-muted-foreground">Total Months</p>
                 </div>
-                
+
                 <div className="text-center">
                   <Percent className="h-6 w-6 mx-auto text-orange-600 mb-2" />
                   <div className="text-xl font-bold">{expectedReturn[0]}%</div>
                   <p className="text-sm text-muted-foreground">Annual Return</p>
                 </div>
-                
+
                 <div className="text-center">
                   <DollarSign className="h-6 w-6 mx-auto text-blue-600 mb-2" />
-                  <div className="text-xl font-bold">₹{monthlyInvestment.toLocaleString()}</div>
+                  <div className="text-xl font-bold">
+                    ₹{formatIndianNumber(monthlyInvestment)}
+                  </div>
                   <p className="text-sm text-muted-foreground">Monthly SIP</p>
                 </div>
-                
+
                 <div className="text-center">
                   <TrendingUp className="h-6 w-6 mx-auto text-green-600 mb-2" />
-                  <div className="text-xl font-bold">{((totalReturns / totalInvestment) * 100).toFixed(1)}%</div>
-                  <p className="text-sm text-muted-foreground">Total Return %</p>
+                  <div className="text-xl font-bold">
+                    {((totalReturns / totalInvestment) * 100).toFixed(1)}%
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Total Return %
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -232,7 +268,9 @@ export function SipCalculatorPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Lump Sum Investment</CardTitle>
-                <CardDescription>One-time investment calculation</CardDescription>
+                <CardDescription>
+                  One-time investment calculation
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -244,19 +282,25 @@ export function SipCalculatorPage() {
                     onChange={(e) => setLumpSumAmount(Number(e.target.value))}
                   />
                 </div>
-                
+
                 <div className="space-y-3 pt-4 border-t">
                   <div className="flex justify-between">
                     <span className="text-sm">Initial Investment</span>
-                    <span className="font-medium">₹{lumpSumAmount.toLocaleString()}</span>
+                    <span className="font-medium">
+                      ₹{formatIndianNumber(lumpSumAmount)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Maturity Amount</span>
-                    <span className="font-medium text-green-600">₹{lumpSumMaturity.toLocaleString()}</span>
+                    <span className="font-medium text-green-600">
+                      ₹{formatIndianNumber(lumpSumMaturity)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Total Returns</span>
-                    <span className="font-medium text-green-600">₹{lumpSumReturns.toLocaleString()}</span>
+                    <span className="font-medium text-green-600">
+                      ₹{formatIndianNumber(lumpSumReturns)}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -265,32 +309,45 @@ export function SipCalculatorPage() {
             <Card>
               <CardHeader>
                 <CardTitle>SIP vs Lump Sum Comparison</CardTitle>
-                <CardDescription>Which investment strategy works better?</CardDescription>
+                <CardDescription>
+                  Which investment strategy works better?
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">SIP Returns</span>
-                    <span className="font-bold text-blue-600">₹{totalReturns.toLocaleString()}</span>
+                    <span className="font-bold text-blue-600">
+                      ₹{formatIndianNumber(totalReturns)}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Lump Sum Returns</span>
-                    <span className="font-bold text-purple-600">₹{lumpSumReturns.toLocaleString()}</span>
+                    <span className="text-sm font-medium">
+                      Lump Sum Returns
+                    </span>
+                    <span className="font-bold text-purple-600">
+                      ₹{formatIndianNumber(lumpSumReturns)}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="font-medium">Better Strategy</span>
-                    <span className={`font-bold ${totalReturns > lumpSumReturns ? 'text-blue-600' : 'text-purple-600'}`}>
-                      {totalReturns > lumpSumReturns ? 'SIP' : 'Lump Sum'}
+                    <span
+                      className={`font-bold ${
+                        totalReturns > lumpSumReturns
+                          ? "text-blue-600"
+                          : "text-purple-600"
+                      }`}
+                    >
+                      {totalReturns > lumpSumReturns ? "SIP" : "Lump Sum"}
                     </span>
                   </div>
                 </div>
 
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm text-muted-foreground">
-                    {totalReturns > lumpSumReturns 
+                    {totalReturns > lumpSumReturns
                       ? "SIP provides better returns due to rupee cost averaging and compounding benefits over time."
-                      : "Lump sum investment provides better returns in this scenario, but SIP offers better risk management."
-                    }
+                      : "Lump sum investment provides better returns in this scenario, but SIP offers better risk management."}
                   </p>
                 </div>
               </CardContent>
@@ -303,7 +360,8 @@ export function SipCalculatorPage() {
             <CardHeader>
               <CardTitle>Step-up SIP Calculator</CardTitle>
               <CardDescription>
-                Calculate returns with annual SIP increase (assuming 10% yearly increase)
+                Calculate returns with annual SIP increase (assuming 10% yearly
+                increase)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -313,42 +371,58 @@ export function SipCalculatorPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm">Total Investment</span>
-                      <span className="font-medium">₹{totalInvestment.toLocaleString()}</span>
+                      <span className="font-medium">
+                        ₹{formatIndianNumber(totalInvestment)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Maturity Amount</span>
-                      <span className="font-medium text-green-600">₹{maturityAmount.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">
+                        ₹{formatIndianNumber(maturityAmount)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Total Returns</span>
-                      <span className="font-medium text-green-600">₹{totalReturns.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">
+                        ₹{formatIndianNumber(totalReturns)}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Step-up SIP (10% increase)</h3>
+                  <h3 className="text-lg font-semibold">
+                    Step-up SIP (10% increase)
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm">Total Investment</span>
-                      <span className="font-medium">₹{stepUpInvestment.toLocaleString()}</span>
+                      <span className="font-medium">
+                        ₹{formatIndianNumber(stepUpInvestment)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Maturity Amount</span>
-                      <span className="font-medium text-green-600">₹{stepUpMaturity.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">
+                        ₹{formatIndianNumber(stepUpMaturity)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Total Returns</span>
-                      <span className="font-medium text-green-600">₹{stepUpReturns.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">
+                        ₹{formatIndianNumber(stepUpReturns)}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-2">Step-up SIP Advantage</h4>
+                <h4 className="font-semibold text-green-800 mb-2">
+                  Step-up SIP Advantage
+                </h4>
                 <div className="text-2xl font-bold text-green-600 mb-2">
-                  ₹{(stepUpReturns - totalReturns).toLocaleString()}
+                  ₹{formatIndianNumber(stepUpReturns - totalReturns)}
                 </div>
                 <p className="text-sm text-green-700">
                   Additional returns with step-up SIP compared to regular SIP
@@ -360,4 +434,4 @@ export function SipCalculatorPage() {
       </Tabs>
     </div>
   );
-} 
+}
