@@ -133,7 +133,7 @@ export function BudgetCalculatorPage() {
   } = useExpenses();
   const { loading: profileLoading } = useUserProfile();
 
-  const [monthlyBudget] = useState("40000");
+  const [monthlyBudget, setMonthlyBudget] = useState("40000");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>("");
   const [actionType, setActionType] = useState<"add" | "subtract">("add");
@@ -242,14 +242,37 @@ export function BudgetCalculatorPage() {
   return (
     <div className="mx-auto max-w-8xl space-y-14">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
-          <Calculator className="h-8 w-8" />
-          Budget Calculator
-        </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
-          Plan your monthly budget and track your spending
-        </p>
+      <div className="flex items-center justify-between px-7">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight flex items-center gap-2">
+            <Calculator className="h-8 w-8" />
+            Budget Calculator
+          </h1>
+          <p className="mt-2 text-lg text-muted-foreground">
+            Plan your monthly budget and track your spending
+          </p>
+        </div>
+        <div className="flex flex-col items-end space-y-2">
+          <Label htmlFor="monthly-budget" className="text-sm font-medium">
+            Monthly Budget
+          </Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+              ₹
+            </span>
+            <Input
+              id="monthly-budget"
+              type="text"
+              value={formatIndianNumber(parseFloat(monthlyBudget) || 0)}
+              onChange={(e) => {
+                const numericValue = e.target.value.replace(/[^\d]/g, "");
+                setMonthlyBudget(numericValue);
+              }}
+              className="pl-8 w-48 text-right text-lg font-semibold"
+              placeholder="40,000"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Budget Breakdown Tracker */}
