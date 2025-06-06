@@ -49,6 +49,7 @@ export function PortfolioPage() {
     portfolioItems: dbPortfolioItems,
     loading: portfolioLoading,
     updatePortfolioItem,
+    refresh: refreshPortfolioItems,
   } = usePortfolioItems();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -104,6 +105,31 @@ export function PortfolioPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    try {
+      // Run migrations first to ensure data consistency
+      const migrationsApplied = await DatabaseService.migratePortfolioData();
+
+      // Refresh portfolio items from database
+      await refreshPortfolioItems();
+
+      setLastSaved(new Date());
+
+      // Show feedback if migrations were applied
+      if (migrationsApplied > 0) {
+        console.log(
+          `Portfolio refreshed with ${migrationsApplied} data migrations applied`
+        );
+      }
+    } catch (error) {
+      console.error("Error refreshing portfolio:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate total assets excluding income
   const totalAssets = portfolioItems.reduce(
     (sum, item) => sum + item.amount,
     0
@@ -148,6 +174,15 @@ export function PortfolioPage() {
               Last saved: {lastSaved.toLocaleTimeString()}
             </div>
           )}
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="mr-2"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
           <Button onClick={handleSaveAll} disabled={isLoading}>
             {isLoading ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -171,31 +206,10 @@ export function PortfolioPage() {
               ₹{formatIndianNumber(totalAssets)}
             </p>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                Monthly Income
-              </span>
-              <span className="text-sm font-medium">
-                ₹{formatIndianNumber(profile?.monthlyIncome || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                Total Assets
-              </span>
-              <span className="text-sm font-medium">
-                ₹{formatIndianNumber(totalAssets)}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Pie Chart */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-muted-foreground">
-            Asset Distribution
-          </h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

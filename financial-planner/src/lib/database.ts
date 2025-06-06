@@ -77,6 +77,17 @@ export interface PortfolioItem {
   updatedAt: Date;
 }
 
+export interface PortfolioMigration {
+  itemId: string;
+  updates: {
+    name?: string;
+    category?: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+  };
+}
+
 // Database class extending Dexie
 export class FinancialPlannerDB extends Dexie {
   userProfiles!: Dexie.Table<UserProfile, number>;
@@ -251,7 +262,7 @@ export class DatabaseService {
         {
           itemId: "savings",
           name: "Savings Account",
-          category: "Cash",
+          category: "Savings",
           amount: 150000,
           icon: "PiggyBank",
           color: "bg-blue-100 text-blue-600",
@@ -286,7 +297,7 @@ export class DatabaseService {
         },
         {
           itemId: "epf",
-          name: "EPF/PPF",
+          name: "EPF/PPF/NPS",
           category: "Retirement",
           amount: 125000,
           icon: "Target",
@@ -460,6 +471,105 @@ export class DatabaseService {
     }
   }
 
+  // Update portfolio item category (useful for migrations/corrections)
+  static async updatePortfolioItemCategory(itemId: string, newCategory: string) {
+    const item = await this.getPortfolioItemByItemId(itemId);
+    if (item && item.id) {
+      await db.portfolioItems.update(item.id, {
+        category: newCategory,
+        updatedAt: new Date(),
+      });
+    }
+  }
+
+  // Generic migration function to fix data inconsistencies
+  static async migratePortfolioData() {
+    try {
+      // Define migrations - add new ones as needed
+      const migrations: PortfolioMigration[] = [
+        {
+          itemId: "savings",
+          updates: {
+            category: "Savings", // Fix category if it's not "Savings"
+            name: "Savings Account" // Ensure consistent naming
+          }
+        },
+        {
+          itemId: "epf",
+          updates: {
+            name: "EPF/PPF/NPS", // Update to include NPS
+            category: "Retirement",
+            description: "Provident fund, pension and retirement savings"
+          }
+        },
+        {
+          itemId: "mutual_funds",
+          updates: {
+            category: "Investments",
+            name: "Mutual Funds"
+          }
+        },
+        {
+          itemId: "fixed_deposits",
+          updates: {
+            category: "Safe Investments",
+            name: "Fixed Deposits"
+          }
+        }
+      ];
+
+      let migrationsApplied = 0;
+
+      for (const migration of migrations) {
+        const item = await this.getPortfolioItemByItemId(migration.itemId);
+        if (!item) continue;
+
+        let needsUpdate = false;
+        const updatesToApply: Partial<PortfolioItem> = {};
+
+        // Check each field to see if it needs updating
+        if (migration.updates.name && item.name !== migration.updates.name) {
+          updatesToApply.name = migration.updates.name;
+          needsUpdate = true;
+        }
+        if (migration.updates.category && item.category !== migration.updates.category) {
+          updatesToApply.category = migration.updates.category;
+          needsUpdate = true;
+        }
+        if (migration.updates.description && item.description !== migration.updates.description) {
+          updatesToApply.description = migration.updates.description;
+          needsUpdate = true;
+        }
+        if (migration.updates.icon && item.icon !== migration.updates.icon) {
+          updatesToApply.icon = migration.updates.icon;
+          needsUpdate = true;
+        }
+        if (migration.updates.color && item.color !== migration.updates.color) {
+          updatesToApply.color = migration.updates.color;
+          needsUpdate = true;
+        }
+
+        // Apply updates if needed
+        if (needsUpdate) {
+          console.log(`Migrating ${item.name} (${migration.itemId}):`, updatesToApply);
+          await this.updatePortfolioItem(migration.itemId, updatesToApply);
+          migrationsApplied++;
+        }
+      }
+
+      if (migrationsApplied > 0) {
+        console.log(`Portfolio migration completed: ${migrationsApplied} items updated`);
+      } else {
+        console.log("Portfolio migration completed: No updates needed");
+      }
+      
+      return migrationsApplied;
+    } catch (error) {
+      console.error("Error during portfolio migration:", error);
+      throw error;
+    }
+  }
+
   // Utility function to recalculate dashboard stats
   static async recalculateDashboardStats() {
     const expenses = await this.getExpenses();
@@ -484,3 +594,4 @@ export class DatabaseService {
 // Initialize database when module loads
 DatabaseService.initializeDefaultData().catch(console.error);
 DatabaseService.initializePortfolioItems().catch(console.error);
+DatabaseService.migratePortfolioData().catch(console.error);
