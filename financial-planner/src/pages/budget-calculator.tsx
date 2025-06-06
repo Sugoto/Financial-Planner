@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -28,6 +28,7 @@ import {
   Plus,
   Minus,
   Heart,
+  ShoppingCart,
 } from "lucide-react";
 import { formatIndianNumber } from "@/lib/utils";
 import { useExpenses, useUserProfile } from "@/hooks/useFinancialData";
@@ -60,8 +61,8 @@ const NEEDS_CATEGORIES = [
   },
   {
     id: "wfh-meals",
-    title: "WFH Meals",
-    subtitle: "Work from home food",
+    title: "Home Meals",
+    subtitle: "Ordering food at home",
     icon: Coffee,
     color: "text-orange-600",
     bgColor: "bg-orange-100",
@@ -73,6 +74,14 @@ const NEEDS_CATEGORIES = [
     icon: Car,
     color: "text-green-600",
     bgColor: "bg-green-100",
+  },
+  {
+    id: "essentials",
+    title: "Essentials",
+    subtitle: "Groceries, toiletries, etc.",
+    icon: ShoppingCart,
+    color: "text-gray-600",
+    bgColor: "bg-gray-100",
   },
 ];
 
@@ -109,6 +118,22 @@ const WANTS_CATEGORIES = [
     color: "text-indigo-600",
     bgColor: "bg-indigo-100",
   },
+  {
+    id: "shopping",
+    title: "Shopping",
+    subtitle: "Clothing, electronics, etc.",
+    icon: ShoppingCart,
+    color: "text-gray-600",
+    bgColor: "bg-gray-100",
+  },
+  {
+    id: "snacks",
+    title: "Snacks",
+    subtitle: "Snacks & beverages",
+    icon: Coffee,
+    color: "text-purple-600",
+    bgColor: "bg-purple-100",
+  },
 ];
 
 const ALL_CATEGORIES = [...NEEDS_CATEGORIES, ...WANTS_CATEGORIES];
@@ -120,20 +145,13 @@ export function BudgetCalculatorPage() {
     addExpense,
     updateExpense,
   } = useExpenses();
-  const { profile, loading: profileLoading } = useUserProfile();
+  const { loading: profileLoading } = useUserProfile();
 
-  const [monthlyIncome, setMonthlyIncome] = useState("");
+  const [monthlyBudget] = useState("40000");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>("");
   const [actionType, setActionType] = useState<"add" | "subtract">("add");
   const [inputAmount, setInputAmount] = useState("");
-
-  // Update local income state when profile loads
-  useEffect(() => {
-    if (profile && !profileLoading) {
-      setMonthlyIncome(profile.monthlyIncome.toString());
-    }
-  }, [profile, profileLoading]);
 
   // Get expense amount for a specific category
   const getCategoryAmount = (categoryId: string) => {
@@ -144,7 +162,7 @@ export function BudgetCalculatorPage() {
     return expense?.amount || 0;
   };
 
-  const income = parseFloat(monthlyIncome) || 0;
+  const budget = parseFloat(monthlyBudget) || 0;
 
   const handleCategoryAction = (
     categoryId: string,
@@ -230,13 +248,13 @@ export function BudgetCalculatorPage() {
     return sum + getCategoryAmount(category.id);
   }, 0);
 
-  const needsPercentage = income > 0 ? (needsTotal / income) * 100 : 0;
-  const wantsPercentage = income > 0 ? (wantsTotal / income) * 100 : 0;
+  const needsPercentage = budget > 0 ? (needsTotal / budget) * 100 : 0;
+  const wantsPercentage = budget > 0 ? (wantsTotal / budget) * 100 : 0;
   const savingsPercentage =
-    income > 0 ? ((income - needsTotal - wantsTotal) / income) * 100 : 0;
+    budget > 0 ? ((budget - needsTotal - wantsTotal) / budget) * 100 : 0;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-14">
+    <div className="mx-auto max-w-8xl space-y-14">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold tracking-tight flex items-center justify-center gap-2">
@@ -248,7 +266,7 @@ export function BudgetCalculatorPage() {
         </p>
       </div>
 
-      {/* Income Breakdown Tracker */}
+      {/* Budget Breakdown Tracker */}
       <div>
         <CardContent>
           <div className="space-y-4">
@@ -312,7 +330,7 @@ export function BudgetCalculatorPage() {
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    ₹{formatIndianNumber(income - needsTotal - wantsTotal)}
+                    ₹{formatIndianNumber(budget - needsTotal - wantsTotal)}
                   </div>
                 </div>
               </div>
@@ -322,17 +340,17 @@ export function BudgetCalculatorPage() {
       </div>
 
       {/* Budget Calculator */}
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Needs Categories */}
-        <Card>
-          <CardHeader>
+        <div>
+          <CardHeader className="pb-5">
             <CardTitle className="text-green-700">Needs</CardTitle>
             <CardDescription>
               Essential expenses you can't avoid
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {NEEDS_CATEGORIES.map((category) => {
                 const IconComponent = category.icon;
                 const amount = getCategoryAmount(category.id);
@@ -393,18 +411,18 @@ export function BudgetCalculatorPage() {
               })}
             </div>
           </CardContent>
-        </Card>
+        </div>
 
         {/* Wants Categories */}
-        <Card>
-          <CardHeader>
+        <div>
+          <CardHeader className="pb-5">
             <CardTitle className="text-purple-700">Wants</CardTitle>
             <CardDescription>
               Lifestyle and entertainment expenses
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {WANTS_CATEGORIES.map((category) => {
                 const IconComponent = category.icon;
                 const amount = getCategoryAmount(category.id);
@@ -465,7 +483,7 @@ export function BudgetCalculatorPage() {
               })}
             </div>
           </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Amount Input Dialog */}
