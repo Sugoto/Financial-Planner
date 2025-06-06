@@ -24,10 +24,10 @@ import {
   Zap,
   Car,
   Coffee,
-  ShoppingCart,
   Gamepad2,
   Plus,
   Minus,
+  Heart,
 } from "lucide-react";
 import { formatIndianNumber } from "@/lib/utils";
 import { useExpenses, useUserProfile } from "@/hooks/useFinancialData";
@@ -51,6 +51,14 @@ const NEEDS_CATEGORIES = [
     bgColor: "bg-yellow-100",
   },
   {
+    id: "health",
+    title: "Health",
+    subtitle: "Gym & medicines",
+    icon: Heart,
+    color: "text-red-600",
+    bgColor: "bg-red-100",
+  },
+  {
     id: "wfh-meals",
     title: "WFH Meals",
     subtitle: "Work from home food",
@@ -65,14 +73,6 @@ const NEEDS_CATEGORIES = [
     icon: Car,
     color: "text-green-600",
     bgColor: "bg-green-100",
-  },
-  {
-    id: "office",
-    title: "Office",
-    subtitle: "Work-related expenses",
-    icon: ShoppingCart,
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
   },
 ];
 
@@ -195,6 +195,12 @@ export function BudgetCalculatorPage() {
     setDialogOpen(false);
     setInputAmount("");
     setCurrentCategory("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleConfirmAction();
+    }
   };
 
   if (expensesLoading || profileLoading) {
@@ -485,6 +491,7 @@ export function BudgetCalculatorPage() {
                 placeholder="Enter amount"
                 value={inputAmount}
                 onChange={(e) => setInputAmount(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="col-span-3"
               />
             </div>
