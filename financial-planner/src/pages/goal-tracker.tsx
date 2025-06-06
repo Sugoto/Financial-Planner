@@ -118,11 +118,7 @@ export function GoalTrackerPage() {
     const currentNetWorth = portfolioTotal;
 
     // Calculate monthly savings available for investment
-    const monthlySavings = stats.monthlySavings;
-    const availableForInvestment = monthlySavings;
-
-    // Progress calculation
-    const progress = (currentNetWorth / TARGET_AMOUNT) * 100;
+    const availableForInvestment = 100000;
 
     // Calculate time without inflation
     const { months: monthsWithoutInflation, years: yearsWithoutInflation } =
@@ -146,11 +142,17 @@ export function GoalTrackerPage() {
         INFLATION_RATE
       );
 
+    // Progress calculation - based on inflation toggle
+    const currentTarget = inflationAdjusted
+      ? inflationAdjustedTarget
+      : TARGET_AMOUNT;
+    const progress = (currentNetWorth / currentTarget) * 100;
+
     // Calculate required monthly investment to reach goal in reasonable time (10 years)
     const targetTimeYears = 10;
     const requiredMonthlyInvestment = calculateRequiredMonthlyInvestment(
       currentNetWorth,
-      inflationAdjusted ? inflationAdjustedTarget : TARGET_AMOUNT,
+      currentTarget,
       targetTimeYears,
       EXPECTED_RETURN
     );
@@ -166,7 +168,7 @@ export function GoalTrackerPage() {
       monthsWithInflation,
       yearsWithInflation,
       currentNetWorth,
-      targetAmount: inflationAdjusted ? inflationAdjustedTarget : TARGET_AMOUNT,
+      targetAmount: currentTarget,
       monthlyContribution: availableForInvestment,
       progress,
       requiredMonthlyInvestment,
@@ -317,10 +319,19 @@ export function GoalTrackerPage() {
       <Card>
         <CardHeader>
           <CardTitle>Goal Progress</CardTitle>
-          <CardDescription>Your journey to ₹1 Crore</CardDescription>
+          <CardDescription>
+            Your journey to ₹1 Crore{" "}
+            {inflationAdjusted ? "(inflation adjusted)" : "(current value)"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Progress</span>
+              <span className="text-lg font-bold text-blue-600">
+                {calculation?.progress.toFixed(1)}%
+              </span>
+            </div>
             <Progress value={calculation?.progress || 0} className="h-3" />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>
