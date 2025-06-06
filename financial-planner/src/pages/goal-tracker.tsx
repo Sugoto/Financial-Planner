@@ -9,13 +9,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import {
-  TrendingUp,
-  Target,
-  Calendar,
-  DollarSign,
-  Calculator,
-} from "lucide-react";
+import { TrendingUp, Target, Calendar, DollarSign } from "lucide-react";
 import {
   useDashboardStats,
   usePortfolioItems,
@@ -210,45 +204,59 @@ export function GoalTrackerPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight">Goal Tracker</h1>
-        <p className="mt-2 text-lg text-muted-foreground">
-          Track your progress towards reaching ₹1 Crore net worth
-        </p>
-      </div>
-
-      {/* Inflation Toggle */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="h-5 w-5" />
-                Calculation Settings
-              </CardTitle>
-              <CardDescription>
-                Adjust your calculation preferences
-              </CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="inflation-toggle">Post Inflation</Label>
-              <Switch
-                id="inflation-toggle"
-                checked={inflationAdjusted}
-                onCheckedChange={setInflationAdjusted}
-              />
-            </div>
+      {/* Header with Inflation Toggle */}
+      <div className="flex items-start justify-between">
+        <div className="text-center flex-1">
+          <h1 className="text-4xl font-bold tracking-tight">Goal Tracker</h1>
+          <p className="mt-2 text-lg text-muted-foreground">
+            Track your progress towards reaching ₹1 Crore net worth
+          </p>
+        </div>
+        <div className="flex flex-col items-end space-y-2 mt-2">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="inflation-toggle" className="text-sm font-medium">
+              Post Inflation
+            </Label>
+            <Switch
+              id="inflation-toggle"
+              checked={inflationAdjusted}
+              onCheckedChange={setInflationAdjusted}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs text-muted-foreground text-right max-w-48">
             {inflationAdjusted
               ? "Calculations include 6% annual inflation rate"
               : "Calculations are at current value without inflation adjustment"}
           </div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Progress</span>
+              <span className="text-lg font-bold text-blue-600">
+                {calculation?.progress.toFixed(1)}%
+              </span>
+            </div>
+            <Progress
+              value={calculation?.progress || 0}
+              className="h-3 [&>div]:bg-blue-600"
+            />
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>
+                ₹{formatIndianNumber(calculation?.currentNetWorth || 0)}
+              </span>
+              <span>
+                ₹
+                {formatIndianNumber(calculation?.targetAmount || TARGET_AMOUNT)}
+              </span>
+            </div>
+          </div>
         </CardContent>
-      </Card>
+      </div>
 
       {/* Goal Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -314,37 +322,6 @@ export function GoalTrackerPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Progress Bar */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Goal Progress</CardTitle>
-          <CardDescription>
-            Your journey to ₹1 Crore{" "}
-            {inflationAdjusted ? "(inflation adjusted)" : "(current value)"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium">Progress</span>
-              <span className="text-lg font-bold text-blue-600">
-                {calculation?.progress.toFixed(1)}%
-              </span>
-            </div>
-            <Progress value={calculation?.progress || 0} className="h-3" />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>
-                ₹{formatIndianNumber(calculation?.currentNetWorth || 0)}
-              </span>
-              <span>
-                ₹
-                {formatIndianNumber(calculation?.targetAmount || TARGET_AMOUNT)}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Time to Goal */}
       <div className="grid gap-6 md:grid-cols-2">
