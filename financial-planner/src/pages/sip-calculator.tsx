@@ -132,15 +132,16 @@ export function SipCalculatorPage() {
                   <Label htmlFor="monthly-investment">Monthly Investment</Label>
                   <Input
                     id="monthly-investment"
-                    type="number"
-                    value={monthlyInvestment}
-                    onChange={(e) =>
-                      setMonthlyInvestment(Number(e.target.value))
-                    }
+                    type="text"
+                    value={`₹${formatIndianNumber(monthlyInvestment)}`}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[₹,]/g, "");
+                      const numValue = Number(value);
+                      if (!isNaN(numValue)) {
+                        setMonthlyInvestment(numValue);
+                      }
+                    }}
                   />
-                  <p className="text-sm text-muted-foreground">
-                    ₹{formatIndianNumber(monthlyInvestment)}
-                  </p>
                 </div>
 
                 <div className="space-y-3">
@@ -183,7 +184,7 @@ export function SipCalculatorPage() {
 
                 <Button className="w-full" onClick={handleSipUpdate}>
                   <Calculator className="mr-2 h-4 w-4" />
-                  Save & Recalculate
+                  Save
                 </Button>
               </CardContent>
             </Card>
@@ -200,7 +201,7 @@ export function SipCalculatorPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 border rounded-lg">
                     <DollarSign className="h-6 w-6 mx-auto text-blue-600 mb-2" />
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold">
                       ₹{formatIndianNumber(totalInvestment)}
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -209,22 +210,24 @@ export function SipCalculatorPage() {
                   </div>
 
                   <div className="text-center p-4 border rounded-lg">
-                    <Target className="h-6 w-6 mx-auto text-green-600 mb-2" />
-                    <div className="text-2xl font-bold text-green-600">
-                      ₹{formatIndianNumber(maturityAmount)}
+                    <TrendingUp className="h-6 w-6 mx-auto text-green-600 mb-2" />
+                    <div className="text-2xl font-bold">
+                      ₹{formatIndianNumber(totalReturns)}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Maturity Amount
+                      Total Returns
                     </p>
                   </div>
                 </div>
 
-                <div className="text-center p-4 border rounded-lg bg-green-50">
-                  <TrendingUp className="h-6 w-6 mx-auto text-green-600 mb-2" />
+                <div className="text-center p-4 border rounded-lg">
+                  <Target className="h-6 w-6 mx-auto text-green-600 mb-2" />
                   <div className="text-3xl font-bold text-green-600">
-                    ₹{formatIndianNumber(totalReturns)}
+                    ₹{formatIndianNumber(maturityAmount)}
                   </div>
-                  <p className="text-sm text-muted-foreground">Total Returns</p>
+                  <p className="text-sm text-muted-foreground">
+                    Maturity Amount
+                  </p>
                 </div>
 
                 <div className="space-y-2">
