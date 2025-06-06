@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -31,6 +30,7 @@ import {
   ShoppingCart,
   Pin,
   Smile,
+  Apple,
 } from "lucide-react";
 import { formatIndianNumber } from "@/lib/utils";
 import { useExpenses, useUserProfile } from "@/hooks/useFinancialData";
@@ -68,6 +68,14 @@ const NEEDS_LIST = [
     icon: ShoppingCart,
     color: "text-gray-600",
     bgColor: "bg-gray-100",
+  },
+  {
+    title: "Fruits",
+    subtitle: "Daily fresh fruit bowl",
+    amount: 1500,
+    icon: Apple,
+    color: "text-green-600",
+    bgColor: "bg-green-100",
   },
 ];
 
@@ -412,63 +420,59 @@ export function BudgetCalculatorPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
               {WANTS_CATEGORIES.map((category) => {
                 const IconComponent = category.icon;
                 const amount = getCategoryAmount(category.id);
 
                 return (
-                  <Card key={category.id} className="relative">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
-                        >
-                          <IconComponent
-                            className={`h-5 w-5 ${category.color}`}
-                          />
+                  <div
+                    key={category.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                      >
+                        <IconComponent
+                          className={`h-5 w-5 ${category.color}`}
+                        />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-lg">
+                          {category.title}
                         </div>
-                        <div>
-                          <CardTitle className="text-lg">
-                            {category.title}
-                          </CardTitle>
-                          <CardDescription className="text-sm">
-                            {category.subtitle}
-                          </CardDescription>
+                        <div className="text-sm text-muted-foreground">
+                          {category.subtitle}
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex items-center justify-between">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleCategoryAction(category.id, "subtract")
-                          }
-                          disabled={amount === 0}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
+                    </div>
 
-                        <div className="text-center">
-                          <div className="text-2xl font-bold">
-                            ₹{formatIndianNumber(amount)}
-                          </div>
-                        </div>
+                    <div className="flex items-center space-x-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleCategoryAction(category.id, "subtract")
+                        }
+                        disabled={amount === 0}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            handleCategoryAction(category.id, "add")
-                          }
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                      <div className="text-xl font-bold min-w-[120px] text-center">
+                        ₹{formatIndianNumber(amount)}
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCategoryAction(category.id, "add")}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
