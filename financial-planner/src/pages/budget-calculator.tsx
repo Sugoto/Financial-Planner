@@ -55,7 +55,7 @@ const NEEDS_LIST = [
   },
   {
     title: "Gym",
-    subtitle: "Health & fitness",
+    subtitle: "Monthly gym membership",
     amount: 1500,
     icon: Heart,
     color: "text-red-600",
@@ -64,7 +64,7 @@ const NEEDS_LIST = [
   {
     title: "Toiletries",
     subtitle: "Personal care essentials",
-    amount: 1000,
+    amount: 1500,
     icon: ShoppingCart,
     color: "text-gray-600",
     bgColor: "bg-gray-100",
@@ -127,6 +127,14 @@ const WANTS_CATEGORIES = [
     icon: Coffee,
     color: "text-purple-600",
     bgColor: "bg-purple-100",
+  },
+  {
+    id: "supplements",
+    title: "Supplements",
+    subtitle: "Protein & health supplements",
+    icon: Heart,
+    color: "text-green-600",
+    bgColor: "bg-green-100",
   },
 ];
 
@@ -370,7 +378,7 @@ export function BudgetCalculatorPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {NEEDS_LIST.map((category, index) => {
                 const IconComponent = category.icon;
                 const amount = category.amount;
@@ -378,27 +386,27 @@ export function BudgetCalculatorPage() {
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-center justify-between p-3 border rounded-lg"
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
                       <div
-                        className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                        className={`w-8 h-8 ${category.bgColor} rounded-full flex items-center justify-center`}
                       >
                         <IconComponent
-                          className={`h-5 w-5 ${category.color}`}
+                          className={`h-4 w-4 ${category.color}`}
                         />
                       </div>
                       <div>
-                        <div className="font-semibold text-lg">
+                        <div className="font-semibold text-sm">
                           {category.title}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           {category.subtitle}
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-xl font-bold min-w-[120px] text-center">
+                    <div className="text-sm font-bold">
                       ₹{formatIndianNumber(amount)}
                     </div>
                   </div>
@@ -420,7 +428,7 @@ export function BudgetCalculatorPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {WANTS_CATEGORIES.map((category) => {
                 const IconComponent = category.icon;
                 const amount = getCategoryAmount(category.id);
@@ -428,27 +436,27 @@ export function BudgetCalculatorPage() {
                 return (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-center justify-between p-3 border rounded-lg"
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
                       <div
-                        className={`w-10 h-10 ${category.bgColor} rounded-full flex items-center justify-center`}
+                        className={`w-8 h-8 ${category.bgColor} rounded-full flex items-center justify-center`}
                       >
                         <IconComponent
-                          className={`h-5 w-5 ${category.color}`}
+                          className={`h-4 w-4 ${category.color}`}
                         />
                       </div>
                       <div>
-                        <div className="font-semibold text-lg">
+                        <div className="font-semibold text-sm">
                           {category.title}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           {category.subtitle}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -456,11 +464,12 @@ export function BudgetCalculatorPage() {
                           handleCategoryAction(category.id, "subtract")
                         }
                         disabled={amount === 0}
+                        className="h-7 w-7 p-0"
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-3 w-3" />
                       </Button>
 
-                      <div className="text-xl font-bold min-w-[120px] text-center">
+                      <div className="text-sm font-bold min-w-[60px] text-center">
                         ₹{formatIndianNumber(amount)}
                       </div>
 
@@ -468,8 +477,9 @@ export function BudgetCalculatorPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleCategoryAction(category.id, "add")}
+                        className="h-7 w-7 p-0"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
