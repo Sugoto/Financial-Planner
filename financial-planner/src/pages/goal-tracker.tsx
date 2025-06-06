@@ -28,6 +28,8 @@ const TARGET_AMOUNT = 10000000; // 1 Cr
 const INFLATION_RATE = 0.06; // 6% annual inflation
 const EXPECTED_RETURN = 0.12; // 12% annual return (default)
 const SAVINGS_RETURN = 0.03; // 3% annual return for savings account
+const MONTHLY_INVESTMENT = 100000; // ₹1 lac for investments at 12% return
+const MONTHLY_SAVINGS = 200000 - 40000 - MONTHLY_INVESTMENT; // ₹60k for savings account at 4% return
 
 const calculateTimeToReachGoal = (
   currentAmount: number,
@@ -126,16 +128,14 @@ export function GoalTrackerPage() {
     const currentNetWorth = portfolioTotal;
 
     // Monthly amounts
-    const monthlyInvestment = 100000; // ₹1 lac for investments at 12% return
-    const monthlySavings = 60000; // ₹60k for savings account at 4% return
 
     // Calculate time without inflation
     const { months: monthsWithoutInflation, years: yearsWithoutInflation } =
       calculateTimeToReachGoal(
         currentNetWorth,
         TARGET_AMOUNT,
-        monthlyInvestment,
-        monthlySavings,
+        MONTHLY_INVESTMENT,
+        MONTHLY_SAVINGS,
         EXPECTED_RETURN,
         SAVINGS_RETURN,
         0
@@ -148,8 +148,8 @@ export function GoalTrackerPage() {
       calculateTimeToReachGoal(
         currentNetWorth,
         inflationAdjustedTarget,
-        monthlyInvestment,
-        monthlySavings,
+        MONTHLY_INVESTMENT,
+        MONTHLY_SAVINGS,
         EXPECTED_RETURN,
         SAVINGS_RETURN,
         INFLATION_RATE
@@ -169,12 +169,12 @@ export function GoalTrackerPage() {
       targetTimeYears,
       EXPECTED_RETURN,
       SAVINGS_RETURN,
-      monthlySavings
+      MONTHLY_SAVINGS
     );
 
     const shortfall = Math.max(
       0,
-      requiredMonthlyInvestment - monthlyInvestment
+      requiredMonthlyInvestment - MONTHLY_INVESTMENT
     );
 
     setCalculation({
@@ -184,7 +184,7 @@ export function GoalTrackerPage() {
       yearsWithInflation,
       currentNetWorth,
       targetAmount: currentTarget,
-      monthlyContribution: monthlyInvestment + monthlySavings,
+      monthlyContribution: MONTHLY_INVESTMENT + MONTHLY_SAVINGS,
       progress,
       requiredMonthlyInvestment,
       shortfall,
@@ -332,7 +332,7 @@ export function GoalTrackerPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ₹{formatIndianNumber(100000)}
+              ₹{formatIndianNumber(MONTHLY_INVESTMENT)}
             </div>
             <p className="text-xs text-muted-foreground">
               at 12% annual return
@@ -349,7 +349,7 @@ export function GoalTrackerPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ₹{formatIndianNumber(60000)}
+              ₹{formatIndianNumber(MONTHLY_SAVINGS)}
             </div>
             <p className="text-xs text-muted-foreground">at 3% annual return</p>
           </CardContent>
