@@ -11,7 +11,9 @@ export function formatIndianNumber(num: number): string {
     return "-" + formatIndianNumber(-num);
   }
   
-  const numStr = num.toString();
+  // Round to remove decimals and convert to integer
+  const roundedNum = Math.round(num);
+  const numStr = roundedNum.toString();
   
   if (numStr.length <= 3) {
     return numStr;
