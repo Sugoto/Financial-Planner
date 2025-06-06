@@ -4,6 +4,7 @@ import { HomePage } from "@/pages/home";
 import { BudgetCalculatorPage } from "@/pages/budget-calculator";
 import { SipCalculatorPage } from "@/pages/sip-calculator";
 import { PortfolioPage } from "@/pages/portfolio";
+import { GoalTrackerPage } from "@/pages/goal-tracker";
 import "@/lib/database-utils";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/budget-calculator" element={<BudgetCalculatorPage />} />
           <Route path="/sip-calculator" element={<SipCalculatorPage />} />
+          <Route path="/goal-tracker" element={<GoalTrackerPage />} />
         </Routes>
       </AppLayout>
     </Router>

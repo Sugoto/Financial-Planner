@@ -472,7 +472,10 @@ export class DatabaseService {
   }
 
   // Update portfolio item category (useful for migrations/corrections)
-  static async updatePortfolioItemCategory(itemId: string, newCategory: string) {
+  static async updatePortfolioItemCategory(
+    itemId: string,
+    newCategory: string
+  ) {
     const item = await this.getPortfolioItemByItemId(itemId);
     if (item && item.id) {
       await db.portfolioItems.update(item.id, {
@@ -491,31 +494,31 @@ export class DatabaseService {
           itemId: "savings",
           updates: {
             category: "Savings", // Fix category if it's not "Savings"
-            name: "Savings Account" // Ensure consistent naming
-          }
+            name: "Savings Account", // Ensure consistent naming
+          },
         },
         {
           itemId: "epf",
           updates: {
             name: "EPF/PPF/NPS", // Update to include NPS
             category: "Retirement",
-            description: "Provident fund, pension and retirement savings"
-          }
+            description: "Provident fund, pension and retirement savings",
+          },
         },
         {
           itemId: "mutual_funds",
           updates: {
             category: "Investments",
-            name: "Mutual Funds"
-          }
+            name: "Mutual Funds",
+          },
         },
         {
           itemId: "fixed_deposits",
           updates: {
             category: "Safe Investments",
-            name: "Fixed Deposits"
-          }
-        }
+            name: "Fixed Deposits",
+          },
+        },
       ];
 
       let migrationsApplied = 0;
@@ -532,11 +535,17 @@ export class DatabaseService {
           updatesToApply.name = migration.updates.name;
           needsUpdate = true;
         }
-        if (migration.updates.category && item.category !== migration.updates.category) {
+        if (
+          migration.updates.category &&
+          item.category !== migration.updates.category
+        ) {
           updatesToApply.category = migration.updates.category;
           needsUpdate = true;
         }
-        if (migration.updates.description && item.description !== migration.updates.description) {
+        if (
+          migration.updates.description &&
+          item.description !== migration.updates.description
+        ) {
           updatesToApply.description = migration.updates.description;
           needsUpdate = true;
         }
@@ -551,18 +560,23 @@ export class DatabaseService {
 
         // Apply updates if needed
         if (needsUpdate) {
-          console.log(`Migrating ${item.name} (${migration.itemId}):`, updatesToApply);
+          console.log(
+            `Migrating ${item.name} (${migration.itemId}):`,
+            updatesToApply
+          );
           await this.updatePortfolioItem(migration.itemId, updatesToApply);
           migrationsApplied++;
         }
       }
 
       if (migrationsApplied > 0) {
-        console.log(`Portfolio migration completed: ${migrationsApplied} items updated`);
+        console.log(
+          `Portfolio migration completed: ${migrationsApplied} items updated`
+        );
       } else {
         console.log("Portfolio migration completed: No updates needed");
       }
-      
+
       return migrationsApplied;
     } catch (error) {
       console.error("Error during portfolio migration:", error);

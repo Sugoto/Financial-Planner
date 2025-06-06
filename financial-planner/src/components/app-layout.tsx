@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Calculator, Home, TrendingUp, Wallet } from "lucide-react";
+import { Calculator, Home, TrendingUp, Wallet, Target } from "lucide-react";
 
 import {
   Sidebar,
@@ -26,6 +26,11 @@ const navItems = [
     title: "Portfolio",
     url: "/portfolio",
     icon: Wallet,
+  },
+  {
+    title: "Goal Tracker",
+    url: "/goal-tracker",
+    icon: Target,
   },
   {
     title: "Budget Calculator",

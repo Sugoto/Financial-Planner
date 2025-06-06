@@ -156,9 +156,9 @@ export function HomePage() {
               </Link>
             </Button>
             <Button className="w-full justify-start" variant="outline" asChild>
-              <Link to="/">
+              <Link to="/goal-tracker">
                 <Target className="mr-2 h-4 w-4" />
-                Set Financial Goal
+                Goal Tracker
               </Link>
             </Button>
           </CardContent>
