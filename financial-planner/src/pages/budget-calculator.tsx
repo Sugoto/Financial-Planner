@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -52,8 +51,6 @@ export function BudgetCalculatorPage() {
   const savings = income - totalExpenses;
   const savingsRate = income > 0 ? (savings / income) * 100 : 0;
   const expenseRate = income > 0 ? (totalExpenses / income) * 100 : 0;
-
-
 
   const handleAddExpense = async () => {
     if (newExpenseCategory && newExpenseAmount) {
@@ -109,40 +106,6 @@ export function BudgetCalculatorPage() {
 
         <TabsContent value="calculator" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Income Display */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Income</CardTitle>
-                <CardDescription>
-                  Your total monthly income - <Link to="/portfolio" className="text-primary hover:underline">Edit in Portfolio</Link>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="income">Income Amount</Label>
-                  <Input
-                    id="income"
-                    type="number"
-                    placeholder="₹85,000"
-                    value={monthlyIncome}
-                    readOnly
-                    className="bg-muted cursor-not-allowed"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Income can only be edited in the Portfolio page
-                  </p>
-                </div>
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Monthly Income</span>
-                    <span className="text-lg font-bold text-green-600">
-                      ₹{formatIndianNumber(income)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Budget Summary */}
             <Card>
               <CardHeader>
