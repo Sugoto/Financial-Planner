@@ -3,11 +3,7 @@ import {
   Calculator,
   DollarSign,
   Home,
-  PiggyBank,
-  Target,
   TrendingUp,
-  Settings,
-  BarChart3,
 } from "lucide-react";
 
 import {
@@ -16,7 +12,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -45,23 +40,7 @@ const navItems = [
   },
 ];
 
-const quickActions = [
-  {
-    title: "Emergency Fund",
-    url: "/",
-    icon: Target,
-  },
-  {
-    title: "Expense Tracker",
-    url: "/budget-calculator",
-    icon: DollarSign,
-  },
-  {
-    title: "Investment Planner",
-    url: "/sip-calculator",
-    icon: PiggyBank,
-  },
-];
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -87,33 +66,11 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             </div>
           </SidebarHeader>
-          <SidebarContent>
+                    <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        tooltip={item.title}
-                        asChild
-                        isActive={location.pathname === item.url}
-                      >
-                        <Link to={item.url}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <SidebarGroup>
-              <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {quickActions.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton 
                         tooltip={item.title}
