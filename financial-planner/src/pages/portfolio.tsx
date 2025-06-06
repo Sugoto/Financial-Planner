@@ -7,14 +7,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+
 import {
   DollarSign,
   TrendingUp,
-  Coins,
   PiggyBank,
   Wallet,
   Target,
@@ -24,6 +21,14 @@ import {
 import { DatabaseService } from "@/lib/database";
 import { useUserProfile } from "@/hooks/useFinancialData";
 import { formatIndianNumber } from "@/lib/utils";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 interface PortfolioItem {
   id: string;
@@ -64,15 +69,6 @@ export function PortfolioPage() {
       icon: TrendingUp,
       color: "bg-purple-100 text-purple-600",
       description: "SIP and lump sum mutual fund investments",
-    },
-    {
-      id: "stocks",
-      name: "Direct Stocks",
-      category: "Investments",
-      amount: 45000,
-      icon: Coins,
-      color: "bg-orange-100 text-orange-600",
-      description: "Individual stock holdings",
     },
     {
       id: "fixed_deposits",
@@ -206,124 +202,149 @@ export function PortfolioPage() {
         </div>
       </div>
 
-      {/* Portfolio Items by Category */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {Object.entries(groupedItems).map(([category, items]) => (
-          <Card key={category}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Badge variant="outline">{category}</Badge>
-                <span className="text-lg">{category} Portfolio</span>
-              </CardTitle>
-              <CardDescription>
-                Manage your {category.toLowerCase()} investments and values
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {items.map((item) => {
-                  const Icon = item.icon;
-                  const categoryTotal = items.reduce(
-                    (sum, i) => sum + i.amount,
+      {/* Net Worth and Asset Allocation Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Net Worth Display */}
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-medium text-muted-foreground">
+              Total Net Worth
+            </h2>
+            <p className="text-4xl font-bold text-foreground">
+              ₹{formatIndianNumber(totalAssets)}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">
+                Monthly Income
+              </span>
+              <span className="text-sm font-medium">
+                ₹
+                {formatIndianNumber(
+                  portfolioItems.find((item) => item.id === "income")?.amount ||
                     0
-                  );
-                  const percentage =
-                    categoryTotal > 0 ? (item.amount / categoryTotal) * 100 : 0;
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">
+                Total Assets
+              </span>
+              <span className="text-sm font-medium">
+                ₹{formatIndianNumber(totalAssets)}
+              </span>
+            </div>
+          </div>
+        </div>
 
-                  return (
-                    <div
-                      key={item.id}
-                      className="border rounded-lg p-4 space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${item.color}`}
-                          >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{item.name}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor={`amount-${item.id}`}>
-                          Amount {item.id === "income" ? "(Monthly)" : ""}
-                        </Label>
-                        <Input
-                          id={`amount-${item.id}`}
-                          type="number"
-                          value={item.amount}
-                          onChange={(e) =>
-                            handleAmountUpdate(
-                              item.id,
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
-                          placeholder="₹0"
-                          className="text-right"
+        {/* Pie Chart */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium text-muted-foreground">
+            Asset Distribution
+          </h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={Object.entries(groupedItems)
+                    .filter(([category]) => category !== "Income")
+                    .map(([category, items]) => {
+                      const categoryTotal = items.reduce(
+                        (sum, item) => sum + item.amount,
+                        0
+                      );
+                      return {
+                        name: category,
+                        value: categoryTotal,
+                        percentage:
+                          totalAssets > 0
+                            ? ((categoryTotal / totalAssets) * 100).toFixed(1)
+                            : 0,
+                      };
+                    })}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
+                  label={({ name, percentage }) => `${name} (${percentage}%)`}
+                >
+                  {Object.entries(groupedItems)
+                    .filter(([category]) => category !== "Income")
+                    .map((_, index) => {
+                      const colors = [
+                        "#3b82f6",
+                        "#8b5cf6",
+                        "#f97316",
+                        "#06b6d4",
+                        "#ef4444",
+                      ];
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={colors[index % colors.length]}
                         />
-                      </div>
-
-                      {items.length > 1 && (
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span>Share in {category}</span>
-                            <span>{percentage.toFixed(1)}%</span>
-                          </div>
-                          <Progress value={percentage} className="h-1" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                      );
+                    })}
+                </Pie>
+                <Tooltip
+                  formatter={(value) => [
+                    `₹${formatIndianNumber(Number(value))}`,
+                    "Amount",
+                  ]}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
-      {/* Asset Allocation Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Asset Allocation</CardTitle>
-          <CardDescription>
-            Distribution of your wealth across different categories
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Object.entries(groupedItems)
-              .filter(([category]) => category !== "Income")
-              .map(([category, items]) => {
-                const categoryTotal = items.reduce(
-                  (sum, item) => sum + item.amount,
-                  0
-                );
-                const percentage =
-                  totalAssets > 0 ? (categoryTotal / totalAssets) * 100 : 0;
+      {/* Portfolio Items by Category */}
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {portfolioItems.map((item) => {
+          const Icon = item.icon;
 
-                return (
-                  <div key={category} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{category}</span>
-                      <span>
-                        ₹{formatIndianNumber(categoryTotal)} (
-                        {percentage.toFixed(1)}%)
-                      </span>
-                    </div>
-                    <Progress value={percentage} className="h-2" />
+          return (
+            <Card key={item.id}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${item.color} flex-shrink-0`}
+                  >
+                    <Icon className="h-5 w-5" />
                   </div>
-                );
-              })}
-          </div>
-        </CardContent>
-      </Card>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base leading-tight">{item.name}</CardTitle>
+                    <CardDescription className="text-sm leading-tight mt-1">{item.description}</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Input
+                      id={`amount-${item.id}`}
+                      type="number"
+                      value={item.amount}
+                      onChange={(e) =>
+                        handleAmountUpdate(
+                          item.id,
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      placeholder="₹0"
+                      className="text-right"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
