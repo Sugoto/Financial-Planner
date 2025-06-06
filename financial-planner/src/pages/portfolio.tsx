@@ -54,6 +54,7 @@ export function PortfolioPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [localValues, setLocalValues] = useState<Record<string, string>>({});
 
   // Convert database portfolio items to component format
   const portfolioItems: PortfolioItem[] = dbPortfolioItems.map((item) => ({
@@ -297,16 +298,39 @@ export function PortfolioPage() {
                   <div className="space-y-2">
                     <Input
                       id={`amount-${item.itemId}`}
-                      type="number"
-                      value={item.amount}
-                      onChange={(e) =>
-                        handleAmountUpdate(
-                          item.itemId,
-                          parseFloat(e.target.value) || 0
-                        )
+                      type="text"
+                      value={
+                        localValues[item.itemId] ??
+                        `₹${formatIndianNumber(item.amount)}`
                       }
+                      onChange={(e) => {
+                        // Remove ₹ symbol and commas for editing
+                        const rawValue = e.target.value.replace(/[₹,]/g, "");
+                        setLocalValues((prev) => ({
+                          ...prev,
+                          [item.itemId]: rawValue,
+                        }));
+                      }}
+                      onBlur={(e) => {
+                        const rawValue = e.target.value.replace(/[₹,]/g, "");
+                        const numericValue = parseFloat(rawValue) || 0;
+                        handleAmountUpdate(item.itemId, numericValue);
+                        // Format the value after saving
+                        setLocalValues((prev) => ({
+                          ...prev,
+                          [item.itemId]: `₹${formatIndianNumber(numericValue)}`,
+                        }));
+                      }}
+                      onFocus={(e) => {
+                        // Show raw number for editing
+                        const rawValue = e.target.value.replace(/[₹,]/g, "");
+                        setLocalValues((prev) => ({
+                          ...prev,
+                          [item.itemId]: rawValue,
+                        }));
+                      }}
                       placeholder="₹0"
-                      className="text-right"
+                      className="text-center bg-transparent border-0 border-b-2 border-gray-200 focus:border-blue-500 focus:ring-0 rounded-none px-0 pb-2 transition-colors duration-200"
                     />
                   </div>
                 </div>
