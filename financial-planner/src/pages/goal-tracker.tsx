@@ -5,6 +5,15 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Target, DollarSign } from "lucide-react";
 import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import {
   useDashboardStats,
   usePortfolioItems,
   useSipInvestment,
@@ -22,6 +31,11 @@ interface GoalCalculationResult {
   progress: number;
   requiredMonthlyInvestment: number;
   shortfall: number;
+  projectionData: Array<{
+    year: number;
+    netWorth: number;
+    targetLine: number;
+  }>;
 }
 
 const TARGET_AMOUNT = 10000000; // 1 Cr
@@ -177,6 +191,70 @@ export function GoalTrackerPage() {
       requiredMonthlyInvestment - MONTHLY_INVESTMENT
     );
 
+    // Generate projection data for the chart
+    const generateProjectionData = () => {
+      const data = [];
+      const maxYears = Math.max(
+        inflationAdjusted ? yearsWithInflation : yearsWithoutInflation,
+        10
+      );
+      const projectionYears = Math.min(maxYears + 2, 15); // Cap at 15 years for readability
+
+      // Start with current net worth - assume it's all in investments for simplicity
+      let totalNetWorth = currentNetWorth;
+
+      // Add current year (year 0)
+      data.push({
+        year: 0,
+        netWorth: currentNetWorth,
+        targetLine: TARGET_AMOUNT, // Always ₹1Cr base target
+      });
+
+      for (let year = 1; year <= projectionYears; year++) {
+        // Calculate returns based on inflation adjustment
+        const effectiveInvestmentReturn = inflationAdjusted
+          ? EXPECTED_RETURN - INFLATION_RATE
+          : EXPECTED_RETURN;
+        const effectiveSavingsReturn = inflationAdjusted
+          ? SAVINGS_RETURN - INFLATION_RATE
+          : SAVINGS_RETURN;
+
+        // Calculate monthly compound growth
+        const monthlyInvestmentReturn = effectiveInvestmentReturn / 12;
+        const monthlySavingsReturn = effectiveSavingsReturn / 12;
+
+        // Start each year with previous year's total
+        let investmentPortion = totalNetWorth;
+        let savingsPortion = 0;
+
+        // Simulate monthly contributions for the year
+        for (let month = 0; month < 12; month++) {
+          investmentPortion =
+            investmentPortion * (1 + monthlyInvestmentReturn) +
+            MONTHLY_INVESTMENT;
+          savingsPortion =
+            savingsPortion * (1 + monthlySavingsReturn) + MONTHLY_SAVINGS;
+        }
+
+        totalNetWorth = investmentPortion + savingsPortion;
+
+        // Target line: only inflate if inflation toggle is on
+        const targetForYear = inflationAdjusted
+          ? TARGET_AMOUNT * Math.pow(1 + INFLATION_RATE, year)
+          : TARGET_AMOUNT;
+
+        data.push({
+          year,
+          netWorth: Math.round(totalNetWorth),
+          targetLine: Math.round(targetForYear),
+        });
+      }
+
+      return data;
+    };
+
+    const projectionData = generateProjectionData();
+
     setCalculation({
       monthsWithoutInflation,
       yearsWithoutInflation,
@@ -188,6 +266,7 @@ export function GoalTrackerPage() {
       progress,
       requiredMonthlyInvestment,
       shortfall,
+      projectionData,
     });
   }, [stats, portfolioItems, inflationAdjusted]);
 
@@ -355,6 +434,93 @@ export function GoalTrackerPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Net Worth Projection Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Net Worth Projection
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {inflationAdjusted
+              ? "Projected growth with inflation adjustment"
+              : "Projected growth at current value"}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart
+              data={calculation?.projectionData || []}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 20,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <XAxis
+                dataKey="year"
+                tickFormatter={(value) => `Year ${value}`}
+                className="text-xs"
+              />
+              <YAxis
+                tickFormatter={(value) => {
+                  const crores = value / 10000000;
+                  return `₹${crores.toFixed(1)}Cr`;
+                }}
+                className="text-xs"
+              />
+              <Tooltip
+                labelFormatter={(value) => `Year ${value}`}
+                formatter={(value: number, name: string) => [
+                  `₹${formatIndianNumber(value)}`,
+                  name === "netWorth" ? "Net Worth" : "Target (1 Cr)",
+                ]}
+                contentStyle={{
+                  backgroundColor: "hsl(var(--background))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "6px",
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="netWorth"
+                stroke="hsl(var(--primary))"
+                strokeWidth={3}
+                dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                activeDot={{
+                  r: 6,
+                  stroke: "hsl(var(--primary))",
+                  strokeWidth: 2,
+                }}
+                name="Net Worth"
+              />
+              <Line
+                type="monotone"
+                dataKey="targetLine"
+                stroke="hsl(var(--destructive))"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={false}
+                activeDot={{ r: 4, stroke: "hsl(var(--destructive))" }}
+                name="Target (1 Cr)"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-primary"></div>
+              <span>Your Net Worth</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-destructive border-dashed"></div>
+              <span>Target (₹1 Crore)</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
