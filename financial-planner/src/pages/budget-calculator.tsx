@@ -79,6 +79,14 @@ const NEEDS_LIST = [
     color: "text-green-600",
     bgColor: "bg-green-100",
   },
+  {
+    title: "Home Meals",
+    subtitle: "Ordering food at home",
+    amount: 2000,
+    icon: Utensils,
+    color: "text-orange-600",
+    bgColor: "bg-orange-100",
+  },
 ];
 
 const WANTS_CATEGORIES = [
